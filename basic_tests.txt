@@ -1,0 +1,39 @@
+# Test data (expressions) for basic parsers
+# =========================================
+
+# The test data are meant to be used with the bash script 'run_tests.sh'.
+
+# Empty lines and lines starting with # will be ignored.
+# The other lines contain test expressions (one test per line).
+# Parse results will be considered 'correct' if they are 'precedence correct'.
+# See function 'is_prec_correct' and comments in the code of 'helpers.py'.
+
+# Always separate tokens by one or more spaces. Edit operator definitions in
+# 'binding_powers.json' if required.
+
+# Version: 2021-12-13.
+
+a
+3 !
+& t
+3 * x
+a + b ^ c
+a ^ b + c
+a + b + c
+a ^ b ^ c
+a ! + & b %
+3 * & b + c
+2 + 3 % * 5
+a + b % * & c + d
+2 * & 4  +  5 !
+2 * 4  +  5 !
+2 ! !
+& not a ! %
+not not X % and not Y !
+4 * & a + b
+33 ^ not a and b
+a ^ b * c + d and e
+a and b + c * d ^ e !
+a * & 4 + 5 + 6 % * 2
+
+# End

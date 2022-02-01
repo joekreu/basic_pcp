@@ -1,0 +1,32 @@
+{
+   "#Comments": [
+      "Binding powers, to be used with basic parsers. JSON format.",
+      "-----------------------------------------------------------",
+      "Place prefix operators in RBP, postfix operators in LBP, infix",
+      "operators both in LBP and RBP. All LBP and RBP values specified here",
+      "should be integers in range 6 to 99. Operator names must not contain",
+      "whitespace, backslashes, single or double quotes."
+   ],
+   "LBP": {
+      "and": 8,
+      "+": 14,
+      "#-": 14,
+      "*": 17,
+      "/": 17,
+      "^": 21,
+      "!": 22,
+      "%": 10,
+      ">": 12
+   },
+   "RBP": {
+      "and": 9,
+      "+": 15,
+      "-": 15,
+      "*": 18,
+      "/": 18,
+      "^": 20,
+      "not": 9,
+      "&": 9,
+      ">": 13
+   }
+}
