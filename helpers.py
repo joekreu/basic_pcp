@@ -122,7 +122,7 @@
     Compatible Python versions: 3.5 or higher.
     Only minimal error handling.
 
-    Version 2022-01-29.
+    Version 2022-02-02.
 '''
 
 from sys import argv
@@ -137,7 +137,7 @@ from binarytree import FormatBinaryTree
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.4, 2022-01-29"
+_HELPERS_VERSION = "0.5.5, 2022-02-02"
 
 # Name of JSON file containing binding powers. These binding powers will be
 # overwritten if one of the command line option -r, -d is in effect.

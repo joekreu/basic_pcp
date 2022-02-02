@@ -6,6 +6,9 @@
                              a list of text lines.
     FormatBinaryTree         A subclass of _ListOfLines.
                              Represent and 'pretty-print' a binary parse tree.
+
+    
+    Version: 0.1, 2022-02-02
 '''
 
 # Characters for 'pretty-printing' of tree structures. They can be
