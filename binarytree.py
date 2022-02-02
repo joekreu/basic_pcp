@@ -37,12 +37,8 @@ class _ListOfLines:
         self.lines_count += n_lines
 
     def insert_at(self, linenum, col, text):
-        ''' Insert text into specific line at specific position;
-            Existing text at that position will be overwritten.
-
-            linenum (zero based) -- line for text insertion
-            col (zero based)     -- position for text insertion
-            text                 -- text (string) to be inserted.
+        ''' Insert text into specific line
+            at position linenum, col (both zero based)
         '''
         if not text:    # Don't do anything if text is an empty string
             return
@@ -87,13 +83,6 @@ class _ListOfLines:
 
 class FormatBinaryTree(_ListOfLines):
     ''' Format a binary tree. To be use for 'pretty printing' of parse trees.
-
-        A node in btree must be atomic (int or str), or a list [in_op,
-        left_node, right_node].
-        in_op is considered 'infix' if there is a left_node and a right node,
-        and neither is left_node == $PRE nor is right node == $POST.
-        Otherwise, presence of $PRE makes a prefix operator node, and precence
-        of $POST makes a postfix operator node.
     '''
 
     def __init__(self, btree, linenum=0):

@@ -5,25 +5,6 @@
     This parser uses tokenizer_e which is implemented as generator. The call
     'tokenizer_e(code)' returns a 'generator' for the tokens in 'code'.
     Otherwise, this parser is similar to pcp_it_0_1w.
-
-    Usage example:
-
-    python pcp_it_0_1wg.py '4 + 5 ! * x'
-
-    Use 'python3' instead of 'python' if this is required for Python 3.
-
-    This shorter form will probably work (the Python file must be executable):
-
-    ./pcp_it_0_1wg.py '4 + 5 ! * x'
-
-    Get help with
-
-    python pcp_it_0_1wg.py -h
-
-    The binding powers LBP and RBP will be loaded from 'binding_powers.json'.
-    The binding powers can be edited, see comments in 'binding_powers.json'.
-
-    Version 2022-01-21. Python 3.5 or higher. Only minimal error handling.
 '''
 
 import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser
@@ -31,15 +12,6 @@ import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser
 
 def parse_expr(token):
     ''' Precedence climbing parser, iterative parsing with one 'while' loop.
-
-        Argument:
-        token -- the token generator. as returned by 'tokenizer_e(code)'.
-
-        Global h.LBP[op], h.RBP[op]  -- Binding powers of the operator 'op'.
-
-        Return the parse tree as nested Python list.
-
-        Note: L[-2] is the next-to-last element in a Python list L.
     '''
 
     oo_stack = [next(token), next(token)]    # Get $BEGIN and the first atom.

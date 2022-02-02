@@ -3,122 +3,6 @@
     Objects whose names begin with an underscore are 'private' - they are
     intended for use only in this module.
 
-    Content of this module
-    ----------------------
-
-    _HELPERS_VERSION         Version information for this module
-
-    _BP_JSON_FILENAME        Name of the JSON file containing binding powers
-
-    _GEN_OP_L                Strings for generated operators: Left part,
-    _GEN_OP_C                central part (between left and right binding
-    _GEN_OP_R                power), right part.
-
-    OUTPUTOPTIONS            Set of output controlling command line options
-    OPTIONS                  Set of all command line options.
-
-    _MAX_FOR_PRINTED_TREES   If the the number of tokens (including fake
-                             tokens) is > _MAX_FOR_PRINTED_TREES, the list of
-                             all possible parse trees will not be printed.
-
-    RAND_DEFAULT             Default values for random operators in
-                             _create_random_ops.
-
-    Token                    Named tuple (a type). It contains the token name
-                             and, if the token is an operator, its binding
-                             powers. For use with the function 'tokenizer_d'.
-
-    LBP                      Dictionaries containing left and right binding
-    RBP                      powers. Caution: Global variables, values may be
-                             changed in _set_bp, _prepare_command, run_parser.
-
-    _create_random_ops       Create infix ops with random lbp, rbp (left,
-                             right binding power). It will be used if a parser
-                             module is run with the option '-r'.
-
-    _create_expr_from_bp     Create operators with specified binding powers
-                             (if a parser module is run with the option '-d').
-
-    s_expr                   Format a nested Python list as a Lisp-like
-                             S-expression in a text string.
-
-    extr_names               It is used for display of parse results. Extract
-                             name parts from tokens that are tuples (instances
-                             of 'Token', see above), create a new tree.
-
-    c_sex                    Create subexpression from operator and operands.
-                             Print the new subexpression if the function
-                             attribute 'c_sex.print_subex_creation' is True.
-                             The function attribute is used here to avoid a
-                             global variable.
-
-    _set_bp                  Set missing binding powers for pre- and postfix
-                             operators, for $BEGIN, and for $END.
-    _prep_toklist            Split code, add fake tokens to the token list.
-
-    tokenizer_a              Standard tokenizer, to be used for pcp_ir_0,
-                             pcp_it_0_1w, pcp_it_0_2w, pcp_rec_0_0
-    tokenizer_b              Tokenizer for pcp_rec_0_no_ins
-    tokenizer_c              Tokenizer for pcp_rec_0_1
-    tokenizer_d              Tokenizer for pcp_rec_0_2, pcp_rec_0_3
-    tokenizer_e              A 'generator', used as tokenizer for pcp_it_0_1wg
-
-    first, second, third,    first, second, third element, and 'rest of rest',
-    rrest                    of a singly linked list (car, cadr, caddr, cddr).
-
-    left_weight              Modelled after Annika Aasa, 'Precedence in
-    right_weight             specification and implementation of programming
-    is_prec_correct          languages' (1995). Binding powers are used here
-                             instead of precedence and associativity.
-
-    _top3_weights            Compute left and right weights of a tree, its
-                             left and its right subtrees
-
-    _makebintrees            Create a list of all parsings from a valid list
-                             of tokens, disregarding binding powers. There are
-                             catalan(n) parsings for expressions with n infix
-                             operators, where catalan(n) is the n-th 'Catalan
-                             number'. See en.wikipedia.org/wiki/Catalan_number
-
-    _tokens_in_tree          Return number of tokens in a tree.
-
-    _root_pos                Position of the root operator of the parse tree
-                             in the original expression.
-
-    _lrange, _rrange         Left or right 'range' of an operator in an
-                             alternating token sequence. The 'range' is the
-                             part to the left, or right, resp., that 'belongs'
-                             to the operator.
-    _print_ranges            Print ranges of all operators in an expression.
-
-    _check_all_parsings      Check all possible parse trees of a valid token
-                             list. Check correctness, compute 'range' of top
-                             operator. Print all parse trees if the number of
-                             tokens is <= _MAX_FOR_PRINTED_TREES.
-
-    _add_fakes               Helper function for run_parser. Add fake tokens
-                             to prefix and postfix operator in parse trees.
-                             Only for parsers that work on token lists without
-                             fake tokens.
-
-    _get_options             Get and prepare command line options.
-
-    _print_help              Print help information
-
-    _prepare_command         Helper for 'run_parser': Prepare command line
-                             data.
-
-    _print_result            Helper for 'run_parser': Print parse results.
-
-    run_parser               Test driver: Load binding powers, process command
-                             line, parse, create output, check for
-                             correctness, print. The parse function and the
-                             tokenizer are passed as parameters.
-
-
-    The binding powers are loaded from the JSON file 'binding_powers.json' to
-    the Python dictionaries LBP, RBP.
-
     Compatible Python versions: 3.5 or higher.
     Only minimal error handling.
 
@@ -166,17 +50,8 @@ Token = namedtuple("Token", "nam lp rp")  # For use with tokenizer_d only.
 LBP = {}   # Define dictionaries LBP, RBP as global variables. The values of
 RBP = {}   # LBP, RBP may be changed in _set_bp, _prepare_command, run_parser.
 
-
-# === Functions ===
-
 def _create_random_ops(n_string):
     ''' Create expression with operators with random binding powers.
-
-        Argument:
-        n_string  -- string consisting of zero to three space-separated
-                     positive integers: Number of operators, number of binding
-                     powers, length of expression.
-                     Non-specified values default to RAND_DEFAULT.
 
         Return four values: an validity indicator, two dicts (lbp and rbp
         of generated operators) and a randomly created matching expression.
@@ -216,10 +91,6 @@ def _create_random_ops(n_string):
 
 def _create_expr_from_bp(n_string):
     ''' Create operators and expression from binding powers.
-
-        n_string -- string of the form 'lbp1 rbp1, lbp2 rbp2, ...'
-                    Use '_ rbp' for prefix, 'lbp _' for postfix operators.
-                    Example:    '8 9, 7 6, 11 _, 7 7'
 
         Return four values: an validity indicator, two dicts (lbp and rbp
         of generated operators) and the expression.
@@ -267,11 +138,6 @@ def extr_names(plist):
 
 def c_sex(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
-
-        c_sex(oator, oand1, oand2) returns [oator, oand1, oand2], or
-        [oator, oand1] if oand2 == None. The use of a function at this place
-        allows printing of the subexpression creation process as a side
-        effect, depending on the function attribute 'print_subex_creation'.
     '''
 
     sub = [oator, oand1, oand2] if oand2 else [oator, oand1]
@@ -283,9 +149,6 @@ def c_sex(oator, oand1, oand2=None):
 
 def _set_bp():
     ''' Set missing LBP, RBP values for unary operators and for $BEGIN, $END.
-
-        For use by the tokenizers.
-        CAUTION: Values of global LBP, RBP are changed.
     '''
 
     for oator in RBP:
@@ -311,29 +174,16 @@ def _prep_toklist(code):
     toklist.append("$END")
     return toklist
 
-
-# The five tokenizers. The parameter 'code' is the string containing the
-# code to be parsed. Tokens must be space separated. LBP, RBP from the file
-# 'binding_powers.json' are used unless option -r or -d is in effect.
-
 def tokenizer_a(code):
-    ''' Standard tokenizer, to be used with 4 out of the 8 standard parsers.
+    ''' Standard tokenizer, to be used with 4 out of the 9 standard parsers.
         Compare with 'tokenizer_e'.
-
-        code -- the string containing the code to be parsed.
-
-        Return a tokenizer function.
     '''
 
     toklist = _prep_toklist(code)
     pos = 0                      # Initialise state
 
     def toks(advance=0):
-        ''' Function to be returned by tokenizer_a.
-
-            toks(0) or toks() : Return the current token.
-            toks(1): Advance by one token, return the new current token.
-        '''
+        ''' Function to be returned by tokenizer_a. '''
 
         nonlocal pos
         pos += advance
@@ -345,10 +195,6 @@ def tokenizer_a(code):
 def tokenizer_b(code):
     ''' Tokenizer for pcp_ir_0_no_ins. No insertion of fake tokens for unary
         operators.
-
-        code -- the string containing the code to be parsed
-
-        Return a tokenizer function.
     '''
 
     toklist = ["$BEGIN"] + code.split() + ["$END"]  # Create token list
@@ -365,13 +211,7 @@ def tokenizer_b(code):
 
 
 def tokenizer_c(code):
-    ''' A tokenizer for a functional, recursive parser.
-
-        code     -- string containing the code to be parsed.
-
-        Return a Lisp-like singly linked list of tokens.
-        This list is implemented by pairs (Python tuples of length 2).
-    '''
+    ''' A tokenizer for a functional, recursive parser. '''
 
     return reduce(lambda x, m: (m, x), reversed(_prep_toklist(code)), None)
 
@@ -379,11 +219,6 @@ def tokenizer_c(code):
 def tokenizer_d(code):
     ''' A tokenizer for a functional, recursive parser. Contrary to
         tokenizer_c, tokens are named tuples (of type "Token"). See above.
-
-        code         -- string containing the code to be parsed.
-
-        Return a Lisp-like singly linked list of tokens.
-        This list is implemented by pairs (Python tuples of length 2).
     '''
 
     toklist = [(Token(tok, LBP[tok], RBP[tok]) if tok in LBP
@@ -394,10 +229,6 @@ def tokenizer_d(code):
 def tokenizer_e(code):
     ''' This tokenizer is a 'generater' (it uses the 'yield' statement),
         otherwise ist is similar to tokenizer_a.
-
-        code -- the string containing the code to be parsed.
-
-        Return a generator for the tokens.
     '''
 
     yield "$BEGIN"
@@ -412,31 +243,10 @@ def tokenizer_e(code):
 
 # Functions for singly linked list.
 
-def first(llis):
-    ''' Return first of a singly linked list ('car' in Lisp). '''
-    return llis[0]
-
-
-def second(llis):
-    ''' Return second of a singly linked list ('cadr' in Lisp). '''
-    return llis[1][0]
-
-
-def third(llis):
-    ''' Return third of a singly linked list ('caddr' in Lisp). '''
-    return llis[1][1][0]
-
-
-def rrest(llis):
-    ''' Return rest of rest of a singly linked list ('cddr' in Lisp). '''
-    return llis[1][1]
-
-
-# The functions 'left_weight', 'right_weight' and 'is_prec_correct' are
-# modelled after (but are not identical to) Annika Aasa's 'left' vs.
-# 'right weight' and 'precedence correctness' in "Precedence in specification
-# and implementation of programming languages" (1995). These functions,
-# together with _top3_weights, are only used for correctness tests.
+first = lambda llis: llis[0]
+second = lambda llis: llis[1][0]
+third = lambda llis: llis[1][1][0]
+rrest = lambda llis: llis[1][1]
 
 def left_weight(tree):
     ''' Recursively compute left tree weight. '''
@@ -451,11 +261,7 @@ def right_weight(tree):
 
 
 def is_prec_correct(tree):
-    ''' Is tree precedence correct?
-
-        Atoms are 'correct'; otherwise left and right subtree must be
-        correct, and the condition in the last two lines must be met.
-    '''
+    ''' Is tree precedence correct? '''
 
     return (not isinstance(tree, list) or
             is_prec_correct(tree[1]) and
@@ -482,12 +288,6 @@ def _top3_weights(tree):
 
 def _makebintrees(toklis):
     ''' Create a list of all possible binary trees from a valid token list.
-
-        toklis must be an alternating list of operands and infix
-        operators, starting and ending with an operand.
-
-        There are catalan(n) binary trees for n infix operators (Catalan
-        number). See https://en.wikipedia.org/wiki/Catalan_number.
     '''
 
     if not toklis or not isinstance(toklis, list) or len(toklis) % 2 == 0:
@@ -518,24 +318,14 @@ def _root_pos(tree):
 
 
 def _lrange(toklis, pos, clbp):
-    ''' range to the left of operator at position 'pos' (one-based).
-
-        toklis  list of tokens, with fake operands, without $BEGIN, $END
-        pos     an operator position (even number: 2 <= pos <= len(toklis)-1)
-        clbp    current 'covering' lbp (will be compared with current rbp)
-    '''
+    ''' range to the left of operator at position 'pos' (one-based). '''
 
     return (pos - 1 if pos <= 2 or RBP[toklis[pos-3]] < clbp
             else _lrange(toklis, pos-2, min(clbp, LBP[toklis[pos-3]])))
 
 
 def _rrange(toklis, pos, crbp):
-    ''' range to the right of operator at position 'pos' (one-based).
-
-        toklis  list of tokens, with fake operands, without $BEGIN, $END
-        pos     an operator position (even number: 2 <= pos <= len(toklis)-1)
-        crbp    current 'covering' rbp (will be compared with current lbp)
-    '''
+    ''' range to the right of operator at position 'pos' (one-based). '''
 
     return (pos + 1 if pos >= len(toklis)-1 or LBP[toklis[pos+1]] <= crbp
             else _rrange(toklis, pos+2, min(crbp, RBP[toklis[pos+1]])))
@@ -555,9 +345,6 @@ def _print_ranges(toklis):
 def _check_all_parsings(toklis):
     ''' Helper function for 'run_parser'. Print possible parse trees for
         toklis, check for correctness; does not depend on the parse result.
-
-        Argument:
-        toklis     List of tokens, including $PRE, $POST, without $BEGIN, $END
     '''
 
     all_parse_trees = _makebintrees(toklis)
@@ -591,11 +378,8 @@ def _check_all_parsings(toklis):
 def _add_fakes(tree, non_infix_ops):
     ''' Helper function for run_parser. Add fake tokens to prefix and postfix
         operator in parse tree. For parsers that work without fake tokens.
-
-        Arguments:
-        tree           Parse result (tree)
-        non_infix_ops  Pre- and postfix-operators
     '''
+
     if not isinstance(tree, list):
         return tree
     if len(tree) == 3:
@@ -753,13 +537,6 @@ def _prepare_command():
 def _print_result(res, res1, quiet, code, upsidedown):
     ''' Print parse results. Output depends on 'quiet' and 'upsidedown',
         it may include parse tree, all possible parsings, correctness.
-
-        Arguments:
-        res            Parse result (tree), possibly without $PRE, $POST
-        res1           Parse result (tree), always with $PRE, $POST
-        quiet          'Quietness' (or reciprocally, 'verbosity') - level
-        code           Code to be parsed
-        upsidedown     if true, print parse tree upside down.
     '''
 
     pc_ok = is_prec_correct(res1)  # Correctness is checked with fake tokens
@@ -812,18 +589,6 @@ def _print_result(res, res1, quiet, code, upsidedown):
 
 def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
     ''' Test driver for all basic parsers (parsers matching "pcp*0*.py").
-
-        Load binding powers, process command line, parse, create output,
-        check for correctness. Set values of global LBP, RBP.
-
-        Arguments:
-        parsefun              Parse function
-        tokenizer             One of 'tokenizer_a' to 'tokenizer_e'
-        fake_tokens_inserted  Does the token list contain fake operands for
-                              unary operators? False for 'pcp_ir_0_no_ins'.
-
-        Return 0 if ok, otherwise a number not equal to 0.
-        The function call 'parsefun(tokenizer, code)' is supposed to work.
     '''
 
     valid, code, quiet, random_or_cl_defined, upsidedown = _prepare_command()
