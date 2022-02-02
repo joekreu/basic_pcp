@@ -1,6 +1,6 @@
 ---
 title: "Simple Precedence Climbing Parsing Algorithms based on Binding Powers and Token Insertion"
-date: "January 2022"
+date: "February 2022"
 author: "joekreu"
 ---
 

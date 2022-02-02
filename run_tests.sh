@@ -88,7 +88,7 @@ while read -r -u 10 code; do
 
     if [[ -z "${code// }" || "${code:0:1}" = "#" ]]; then
         continue
-    fi   
+    fi
 
     if [[ $((ncodes % askforret)) -eq 0  ]] ; then
         echo
@@ -115,14 +115,15 @@ while read -r -u 10 code; do
 done 10< $testcodes
 
 echo
-read -r -p "Press return to continue ..." 
+read -r -p "Press return to continue ..."
 
 echo
 echo "Summary"
 echo "-------"
 echo "$ncodes test codes loaded from the file \"$testcodes\"."
 echo "$nparsers parsers (files matching \"$parsers\") run on each test code."
-echo "$ntests tests run (should be = $ncodes * $nparsers)." 
+echo "$ntests tests run (should be = $ncodes * $nparsers)."
 echo "$ncorrect results are precedence correct."
 
 exit
+

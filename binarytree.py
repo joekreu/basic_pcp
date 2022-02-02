@@ -7,7 +7,7 @@
     FormatBinaryTree         A subclass of _ListOfLines.
                              Represent and 'pretty-print' a binary parse tree.
 
-    
+
     Version: 0.1, 2022-02-02
 '''
 
