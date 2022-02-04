@@ -99,8 +99,7 @@ class FormatBinaryTree(_ListOfLines):
             self.h_pos = 1
 
         if isinstance(btree, (int, str)):  # Atomic value?
-            sbt = str(btree)
-            if len(sbt) == 0:
+            if not (sbt := str(btree)):
                 raise ValueError("Empty element in binary tree")
             self.insert_at(linenum, self.h_pos, sbt)
             self.h_pos += len(sbt) + 1
@@ -118,8 +117,7 @@ class FormatBinaryTree(_ListOfLines):
                 self.insert_at(linenum+2, i, _H_LINE_CHAR)
                 i -= 1
 
-        sbt = str(btree[0])
-        if not sbt:
+        if not (sbt := str(btree[0])):
             raise ValueError("Binary tree has empty operator")
         self.insert_at(linenum, self.h_pos, sbt)
         backslash_h_pos = self.h_pos + len(sbt)

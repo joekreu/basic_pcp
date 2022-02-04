@@ -3,7 +3,7 @@
     Objects whose names begin with an underscore are 'private' - they are
     intended for use only in this module.
 
-    Compatible Python versions: 3.5 or higher.
+    Compatible Python versions: 3.8 or higher.
     Only minimal error handling.
 
     Version 2022-02-02.
@@ -49,6 +49,7 @@ Token = namedtuple("Token", "nam lp rp")  # For use with tokenizer_d only.
 
 LBP = {}   # Define dictionaries LBP, RBP as global variables. The values of
 RBP = {}   # LBP, RBP may be changed in _set_bp, _prepare_command, run_parser.
+
 
 def _create_random_ops(n_string):
     ''' Create expression with operators with random binding powers.
@@ -97,10 +98,9 @@ def _create_expr_from_bp(n_string):
         All binding powers in n_string should be in range 6 to 99.
     '''
 
-    op_bps = n_string.split(",")
     express = "A0"
     tlbp, trbp = {}, {}
-    for k, op_bp in enumerate(op_bps):
+    for k, op_bp in enumerate(n_string.split(",")):
         l_r = op_bp.strip().split(" ")
         if len(l_r) != 2 or l_r[0] == "_" and l_r[1] == "_":
             print("Invalid option data: '" + op_bp + "'")
@@ -155,10 +155,8 @@ def _set_bp():
         LBP.setdefault(oator, 100)
     for oator in LBP:
         RBP.setdefault(oator, 100)
-    LBP["$BEGIN"] = 0
-    RBP["$BEGIN"] = -2
-    LBP["$END"] = -1
-    RBP["$END"] = 0
+    LBP["$BEGIN"], RBP["$BEGIN"] = 0, -2
+    LBP["$END"], RBP["$END"] = -1, 0
 
 
 def _prep_toklist(code):
@@ -173,6 +171,7 @@ def _prep_toklist(code):
             toklist.append("$POST")
     toklist.append("$END")
     return toklist
+
 
 def tokenizer_a(code):
     ''' Standard tokenizer, to be used with 4 out of the 9 standard parsers.
@@ -247,6 +246,7 @@ first = lambda llis: llis[0]
 second = lambda llis: llis[1][0]
 third = lambda llis: llis[1][1][0]
 rrest = lambda llis: llis[1][1]
+
 
 def left_weight(tree):
     ''' Recursively compute left tree weight. '''
@@ -347,11 +347,9 @@ def _check_all_parsings(toklis):
         toklis, check for correctness; does not depend on the parse result.
     '''
 
-    all_parse_trees = _makebintrees(toklis)
-    if not all_parse_trees:
+    if not (all_parse_trees := _makebintrees(toklis)):
         return
-    nppt = str(len(all_parse_trees))  # Number of possible parse trees.
-    if nppt == "1":
+    if (nppt := str(len(all_parse_trees))) == "1":
         print("One possible parse tree. It should be precedence correct.")
     else:
         print("\n" + nppt + " possible parse trees are created and checked.")
@@ -526,8 +524,7 @@ def _prepare_command():
             print("code is '" + code + "'" if valid else
                   "Invalid data. Try: " + argv[0] + " -h")
     else:
-        code = (" ".join(argv[start_of_args:])).strip()
-        if not code:
+        if not (code := " ".join(argv[start_of_args:]).strip()):
             print("Nothing to parse. Try option '-h'")
             valid = False
 
