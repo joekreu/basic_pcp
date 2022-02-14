@@ -5,7 +5,9 @@
       "Place prefix operators in RBP, postfix operators in LBP, infix",
       "operators both in LBP and RBP. All LBP and RBP values specified here",
       "should be integers in range 6 to 99. Operator names must not contain",
-      "whitespace, backslashes, single or double quotes."
+      "whitespace, backslashes, single or double quotes.",
+      "LBP and RBP of the operator ':=' differ by more than one. See the",
+      "last two examples in 'basic_test.txt'."
    ],
    "LBP": {
       "and": 8,
@@ -16,7 +18,8 @@
       "^": 21,
       "!": 22,
       "%": 10,
-      ">": 12
+      ">": 12,
+      ":=": 20
    },
    "RBP": {
       "and": 9,
@@ -27,6 +30,7 @@
       "^": 20,
       "not": 9,
       "&": 9,
-      ">": 13
+      ">": 13,
+      ":=": 7
    }
 }

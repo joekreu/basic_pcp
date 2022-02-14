@@ -4,9 +4,11 @@
     intended for use only in this module.
 
     Compatible Python versions: 3.8 or higher.
-    Only minimal error handling.
+    There is only minimal error handling. For example, an operator at the
+    place of an operand will not be recognized as an error. Instead, the
+    misplaced operator will be treated as an operand.
 
-    Version 2022-02-02.
+    Version 2022-02-07.
 '''
 
 from sys import argv
@@ -21,7 +23,11 @@ from binarytree import FormatBinaryTree
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.5, 2022-02-02"
+_HELPERS_VERSION = "0.5.5, 2022-02-14"
+
+# Valid command line options
+OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
+OPTIONS = frozenset(OUTPUTOPTIONS | frozenset({"r", "d"}))  # '|' is set union
 
 # Name of JSON file containing binding powers. These binding powers will be
 # overwritten if one of the command line option -r, -d is in effect.
@@ -32,15 +38,11 @@ _GEN_OP_L = "["               # Left part
 _GEN_OP_C = "|"               # Central part (between binding powers),
 _GEN_OP_R = "]"               # Right part.
 
-# Command line options
-OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
-OPTIONS = frozenset(OUTPUTOPTIONS | frozenset({"r", "d"}))  # '|' is set union
-
 # Maximal number of tokens accepted for creation of all possible parse trees.
 # A value of 11 means 5 operators (including unary operators).
 _MAX_FOR_PRINTED_TREES = 11
 
-# Default values for random operators. See _create_random_ops.
+# Default value for option -r (random operators). See _create_random_ops.
 RAND_DEFAULT = 6
 
 # === Other global definitions ===
@@ -48,13 +50,13 @@ RAND_DEFAULT = 6
 Token = namedtuple("Token", "nam lp rp")  # For use with tokenizer_d only.
 
 LBP = {}   # Define dictionaries LBP, RBP as global variables. The values of
-RBP = {}   # LBP, RBP may be changed in _set_bp, _prepare_command, run_parser.
+RBP = {}   # LBP, RBP will be changed in _set_bp, _prepare_command, run_parser.
 
 
 def _create_random_ops(n_string):
     ''' Create expression with operators with random binding powers.
 
-        Return four values: an validity indicator, two dicts (lbp and rbp
+        Return four values: a validity indicator, two dicts (lbp and rbp
         of generated operators) and a randomly created matching expression.
     '''
 
@@ -138,6 +140,7 @@ def extr_names(plist):
 
 def c_sex(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
+        'print_subex_creation' is an attribute of the function 'c_sex'.
     '''
 
     sub = [oator, oand1, oand2] if oand2 else [oator, oand1]
@@ -160,7 +163,7 @@ def _set_bp():
 
 
 def _prep_toklist(code):
-    ''' Split code, add fake tokens to the list. '''
+    ''' Split code and add fake tokens to the list; return the list. '''
 
     toklist = ["$BEGIN"]
     for tok in code.split():
@@ -175,7 +178,7 @@ def _prep_toklist(code):
 
 def tokenizer_a(code):
     ''' Standard tokenizer, to be used with 4 out of the 9 standard parsers.
-        Compare with 'tokenizer_e'.
+        Return a tokenizer function. Compare with 'tokenizer_e'.
     '''
 
     toklist = _prep_toklist(code)
@@ -240,7 +243,9 @@ def tokenizer_e(code):
     yield "$END"
 
 
-# Functions for singly linked list.
+# Four Functions for singly linked list, similar to car, cadr, caddr, cddr in
+# Lisp. To be used with pcp_rec_0_1, pcp_rec_0_2, pcp_rec_0_3. - Note:
+# Assignments of lambda expressions are not considered good Python style.
 
 first = lambda llis: llis[0]
 second = lambda llis: llis[1][0]
@@ -375,7 +380,8 @@ def _check_all_parsings(toklis):
 
 def _add_fakes(tree, non_infix_ops):
     ''' Helper function for run_parser. Add fake tokens to prefix and postfix
-        operator in parse tree. For parsers that work without fake tokens.
+        operator in parse tree. It is used for results of parsers that work
+        without fake tokens; not used for the actual parsing.
     '''
 
     if not isinstance(tree, list):
@@ -571,7 +577,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     while toks() != "$END":
         toklist.append(toks(1))
     toklist.pop()
-    print("\nToken list as used for checking all parse trees:\n" +
+    print("\nToken list as used for checking of all parse trees:\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
     for k, tok in enumerate(toklist[:-1]):
@@ -585,7 +591,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
 
 
 def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
-    ''' Test driver for all basic parsers (parsers matching "pcp*0*.py").
+    ''' Test driver for standard basic parsers (parsers matching "pcp*0*.py").
     '''
 
     valid, code, quiet, random_or_cl_defined, upsidedown = _prepare_command()

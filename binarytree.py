@@ -8,7 +8,8 @@
                              Represent and 'pretty-print' a binary parse tree.
 
 
-    Version: 0.1, 2022-02-02
+    Version: 0.2, 2022-02-14.
+    Python 3.8 or higher (the 'walrus'-operator ':=' is used).
 '''
 
 # Characters for 'pretty-printing' of tree structures. They can be
@@ -17,12 +18,14 @@ _H_LINE_CHAR = chr(183)       # Vertically centered dot, used for h-lines
 _SLASH_CHAR = "/"             # Forward slash
 _BACKSLASH_CHAR = "\\"        # Backslash
 # Possible alternatives: _SLASH_CHAR=chr(65295), _H_LINE_CHAR=chr(8213)
+# The following is used for upside down representation of parse tress.
+SWAPDIC = {_SLASH_CHAR: _BACKSLASH_CHAR, _BACKSLASH_CHAR: _SLASH_CHAR}
 
 
 class _ListOfLines:
     ''' This class provides some function for processing a list of text lines.
 
-        Insert or overwrite text strings at any position specified by linenum,
+        Text strings can be inserted at any position specified by linenum,
         col. Fill with empty lines, or with space characters, if required.
         The text content is stored in a list of lines (strings).
     '''
@@ -37,8 +40,8 @@ class _ListOfLines:
         self.lines_count += n_lines
 
     def insert_at(self, linenum, col, text):
-        ''' Insert text into specific line
-            at position linenum, col (both zero based)
+        ''' Insert text into specific line at position linenum, col (both zero
+            based). Overwrite existing text at that position, if any.
         '''
         if not text:    # Don't do anything if text is an empty string
             return
@@ -66,19 +69,12 @@ class _ListOfLines:
 
     def swapslashes(self):
         ''' Replace slash by backslash and vice versa in the tree.
-            To be used for 'upside down' representation of a parse tree.
+            To be used for 'upside down' representation of parse trees.
         '''
-
-        def _swapslash(s_ch):    # 's_ch' means 'slash character'
-            if s_ch == _SLASH_CHAR:
-                return _BACKSLASH_CHAR
-            if s_ch == _BACKSLASH_CHAR:
-                return _SLASH_CHAR
-            return s_ch
-
+        
         for linenum, line in enumerate(self.lines):
             self.insert_at(linenum, 0,
-                           "".join([_swapslash(s_ch) for s_ch in list(line)]))
+                           "".join([SWAPDIC.get(s, s) for s in list(line)]))
 
 
 class FormatBinaryTree(_ListOfLines):
