@@ -63,15 +63,10 @@ class _ListOfLines:
         for line in self.lines:
             print(line)
 
-    def reverse(self):
-        ''' Reverse line order. '''
-        self.lines.reverse()
+    def upsidedown(self):
+        ''' Reverse line order; replace slash by backslash and vice versa. '''
 
-    def swapslashes(self):
-        ''' Replace slash by backslash and vice versa in the tree.
-            To be used for 'upside down' representation of parse trees.
-        '''
-        
+        self.lines.reverse()
         for linenum, line in enumerate(self.lines):
             self.insert_at(linenum, 0,
                            "".join([SWAPDIC.get(s, s) for s in list(line)]))

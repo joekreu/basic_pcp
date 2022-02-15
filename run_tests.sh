@@ -8,7 +8,7 @@ Version="0.7, 2021-12-21"
 
 # Usage:
 # Start 'run_tests.sh' in the folder containing the required files (the parser
-# modules, helpers.py, binarytree.py, binding_powers.json, basic_tests.txt):
+# modules, helpers.py, bintree.py, binding_powers.json, basic_tests.txt):
 
 # ./run_tests.sh
 
@@ -41,7 +41,7 @@ if [[ -n "$1" ]]; then
     echo "definitions; the file \"$testcodes\" contains test codes."
     echo
     echo "Run this script in the directory that contains the required files"
-    echo "(the parsers, helpers.py, binarytree.py, binding_powers.json,"
+    echo "(the parsers, helpers.py, bintree.py, binding_powers.json,"
     echo "basic_tests.txt):"
     echo
     echo "./run_tests.sh"

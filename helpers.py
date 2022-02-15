@@ -3,37 +3,37 @@
     Objects whose names begin with an underscore are 'private' - they are
     intended for use only in this module.
 
-    Compatible Python versions: 3.8 or higher.
+    Compatible Python versions: 3.8 or higher - the "walrus" operator is used.
     There is only minimal error handling. For example, an operator at the
     place of an operand will not be recognized as an error. Instead, the
     misplaced operator will be treated as an operand.
 
-    Version 2022-02-07.
+    Version 2022-02-15.
 '''
 
 from sys import argv
-from math import inf  # inf compares greater than any finite integer or float.
+from math import inf  # In comparisons, inf is greater than any int or float.
 from os import path
 from collections import namedtuple
 from functools import reduce
 from random import randint
 from json import load
 
-from binarytree import FormatBinaryTree
+from bintree import FormatBinaryTree
 
 # === Global constants ===
 
 _HELPERS_VERSION = "0.5.5, 2022-02-14"
 
-# Valid command line options
+# Valid command line options. The operator '|' between sets means set union.
 OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
-OPTIONS = frozenset(OUTPUTOPTIONS | frozenset({"r", "d"}))  # '|' is set union
+OPTIONS = frozenset(OUTPUTOPTIONS | frozenset({"r", "d"}))
 
 # Name of JSON file containing binding powers. These binding powers will be
 # overwritten if one of the command line option -r, -d is in effect.
 _BP_JSON_FILENAME = "binding_powers.json"
 
-# Strings for generated operators (to be used with options -r and -d)
+# Strings for generated operators; to be used with options -r and -d.
 _GEN_OP_L = "["               # Left part
 _GEN_OP_C = "|"               # Central part (between binding powers),
 _GEN_OP_R = "]"               # Right part.
@@ -61,7 +61,7 @@ def _create_random_ops(n_string):
     '''
 
     n_operators, n_bp, l_expr = RAND_DEFAULT, RAND_DEFAULT, RAND_DEFAULT
-    r_params = n_string.split(" ")
+    r_params = n_string.split()
     if n_string:
         try:
             n_operators = int(r_params[0])
@@ -103,7 +103,7 @@ def _create_expr_from_bp(n_string):
     express = "A0"
     tlbp, trbp = {}, {}
     for k, op_bp in enumerate(n_string.split(",")):
-        l_r = op_bp.strip().split(" ")
+        l_r = op_bp.strip().split()
         if len(l_r) != 2 or l_r[0] == "_" and l_r[1] == "_":
             print("Invalid option data: '" + op_bp + "'")
             return False, {}, {}, ""
@@ -409,14 +409,15 @@ def _print_help():
           "-r [nop [nbp [lexpr]]]\n\n" +
           pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] -d bp1, " +
           "..., bpn\n\n" + pyword + module_name + "  -h\n\n")
-    print("expr  Expression; enclose in single quotes, " +
-          "separate tokens by spaces.\n\n" +
-          "-v    Maximum output: Print subexpressions in order of creation" +
-          " and\n      operator ranges, in addition to standard output.\n" +
+    print("expr  Expression; enclose in single quotes (double " +
+          "quotes\n      on Windows), separate tokens by spaces.\n\n" +
+          "-v    Maximum output: In addition to standard output, " +
+          "print\n      subexpressions in order of creation, " +
+          "and operator ranges.\n" +
           "-w    Print parse tree upside down, otherwise works like -v.\n" +
           "-s    Standard output, tree representation is included" +
           " (default).\n" +
-          "-u    Print parse tree upside down; otherwise works like -s.\n" +
+          "-u    Print parse tree upside down; otherwise like standard.\n" +
           "-q    Less verbose output (less than standard); no parse tree.\n" +
           "-qq   Print only correctness ('+' or '-'). " +
           "For use in test scripts.\n")
@@ -447,6 +448,8 @@ def _print_help():
           "For options -r, -d: Names of generated operators contain their" +
           " lbp,\nrbp values. For example, the operator '" + _GEN_OP_L + "6" +
           _GEN_OP_C + "7" + _GEN_OP_R + "' has lbp=6, rbp=7.")
+    if pyword:
+        print("Use python3 instead of python if required.")
 
 
 def _get_options():
@@ -522,8 +525,6 @@ def _prepare_command():
         _print_help()
         return False, "", quiet, random_or_cl_defined, False
     if random_or_cl_defined:
-        LBP.clear()
-        RBP.clear()
         LBP.update(ilbp)
         RBP.update(irbp)
         if quiet < 2:
@@ -559,9 +560,8 @@ def _print_result(res, res1, quiet, code, upsidedown):
     print("\nParse tree; always without fake tokens:\n")
 
     btree = FormatBinaryTree(res1)
-    if upsidedown:
-        btree.reverse()
-        btree.swapslashes()
+    if upsidedown:     # Display parse tree upside down?
+        btree.upsidedown()
     btree.printall()
 
     if quiet <= 0:
