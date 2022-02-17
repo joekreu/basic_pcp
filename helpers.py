@@ -3,31 +3,37 @@
     Objects whose names begin with an underscore are 'private' - they are
     intended for use only in this module.
 
-    Compatible Python versions: 3.8 or higher - the "walrus" operator is used.
+    Compatible Python versions: 3.8 or higher (because of "walrus" operator).
     There is only minimal error handling. For example, an operator at the
     place of an operand will not be recognized as an error. Instead, the
     misplaced operator will be treated as an operand.
+    An operand at the place of an operator will raise an exception.
 
-    Version 2022-02-15.
+    See README.
+
+    Version 2022-02-17.
 '''
 
-from sys import argv
-from math import inf  # In comparisons, inf is greater than any int or float.
-from os import path
-from collections import namedtuple
-from functools import reduce
-from random import randint
-from json import load
+# The following items from system imports are used: sys.argv, math.inf,
+# os.argv, collections.namedtuple, functools.reduce, random.randint, json.load
 
-from bintree import FormatBinaryTree
+import sys
+import math
+import os
+import collections
+import functools
+import random
+import json
+
+import bintree       #  The class bintree.FormatBinaryTree is used here.
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.5, 2022-02-14"
+_HELPERS_VERSION = "0.5.6, 2022-02-17"
 
-# Valid command line options. The operator '|' between sets means set union.
-OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
-OPTIONS = frozenset(OUTPUTOPTIONS | frozenset({"r", "d"}))
+# Valid command line options. The operator '|' between sets means 'set union'.
+_OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
+_OPTIONS = frozenset(_OUTPUTOPTIONS | frozenset({"r", "d"}))
 
 # Name of JSON file containing binding powers. These binding powers will be
 # overwritten if one of the command line option -r, -d is in effect.
@@ -39,28 +45,33 @@ _GEN_OP_C = "|"               # Central part (between binding powers),
 _GEN_OP_R = "]"               # Right part.
 
 # Maximal number of tokens accepted for creation of all possible parse trees.
-# A value of 11 means 5 operators (including unary operators).
+# A value of 11 means 5 operators (including unary operators) and 6 operands.
 _MAX_FOR_PRINTED_TREES = 11
 
 # Default value for option -r (random operators). See _create_random_ops.
-RAND_DEFAULT = 6
+_RAND_DEFAULT = 6
 
 # === Other global definitions ===
 
-Token = namedtuple("Token", "nam lp rp")  # For use with tokenizer_d only.
+Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
 LBP = {}   # Define dictionaries LBP, RBP as global variables. The values of
 RBP = {}   # LBP, RBP will be changed in _set_bp, _prepare_command, run_parser.
 
 
+# === Function definitions ===
+
 def _create_random_ops(n_string):
     ''' Create expression with operators with random binding powers.
+
+        n_string  -- space separated string of zero to three integers
+                     (n operators, n binding powers, operators in expression)
 
         Return four values: a validity indicator, two dicts (lbp and rbp
         of generated operators) and a randomly created matching expression.
     '''
 
-    n_operators, n_bp, l_expr = RAND_DEFAULT, RAND_DEFAULT, RAND_DEFAULT
+    n_operators, n_bp, l_expr = _RAND_DEFAULT, _RAND_DEFAULT, _RAND_DEFAULT
     r_params = n_string.split()
     if n_string:
         try:
@@ -78,8 +89,8 @@ def _create_random_ops(n_string):
     tlbp, trbp = {}, {}
 
     for _ in range(n_operators):             # _ is an unused (dummy) variable
-        lbp = randint(1, min(n_bp, 94)) + 5  # All generated binding powers
-        rbp = randint(1, min(n_bp, 94)) + 5  # are in range 6 to 99.
+        lbp = random.randint(1, min(n_bp, 94)) + 5  # Generated binding powers
+        rbp = random.randint(1, min(n_bp, 94)) + 5  # in range 6 to 99.
         opname = _GEN_OP_L + str(lbp) + _GEN_OP_C + str(rbp) + _GEN_OP_R
         tlbp[opname] = lbp
         trbp[opname] = rbp
@@ -87,7 +98,8 @@ def _create_random_ops(n_string):
     express = "A0 "
     oplis = list(tlbp)
     for k in range(l_expr):
-        express += oplis[randint(0, len(oplis)-1)] + " A" + str(k+1) + " "
+        express += (oplis[random.randint(0, len(oplis)-1)] +
+                    " A" + str(k+1) + " ")
 
     return True, tlbp, trbp, express[:-1]
 
@@ -98,6 +110,10 @@ def _create_expr_from_bp(n_string):
         Return four values: an validity indicator, two dicts (lbp and rbp
         of generated operators) and the expression.
         All binding powers in n_string should be in range 6 to 99.
+
+        n_string  --  comma separated list of space separated pairs of numbers
+                      (bnding powers); for unary operators use _ instead of lbp
+                      (prefix operator) or rbp (postfix operator).
     '''
 
     express = "A0"
@@ -173,6 +189,7 @@ def _prep_toklist(code):
         if RBP.get(tok) == 100:
             toklist.append("$POST")
     toklist.append("$END")
+
     return toklist
 
 
@@ -215,7 +232,8 @@ def tokenizer_b(code):
 def tokenizer_c(code):
     ''' A tokenizer for a functional, recursive parser. '''
 
-    return reduce(lambda x, m: (m, x), reversed(_prep_toklist(code)), None)
+    return functools.reduce(lambda x, m: (m, x),
+                            reversed(_prep_toklist(code)), None)
 
 
 def tokenizer_d(code):
@@ -225,7 +243,7 @@ def tokenizer_d(code):
 
     toklist = [(Token(tok, LBP[tok], RBP[tok]) if tok in LBP
                 else Token(tok, None, None)) for tok in _prep_toklist(code)]
-    return reduce(lambda x, m: (m, x), reversed(toklist), None)
+    return functools.reduce(lambda x, m: (m, x), reversed(toklist), None)
 
 
 def tokenizer_e(code):
@@ -253,26 +271,26 @@ third = lambda llis: llis[1][1][0]
 rrest = lambda llis: llis[1][1]
 
 
-def left_weight(tree):
+def _left_weight(tree):
     ''' Recursively compute left tree weight. '''
-    return (min(LBP[tree[0]], left_weight(tree[1]))
-            if isinstance(tree, list) else inf)  # inf means 'infinite'
+    return (min(LBP[tree[0]], _left_weight(tree[1]))
+            if isinstance(tree, list) else math.inf)
 
 
-def right_weight(tree):
+def _right_weight(tree):
     ''' Recursively compute right tree weight. '''
-    return (min(RBP[tree[0]], right_weight(tree[2]))
-            if isinstance(tree, list) else inf)  # inf means 'infinite'
+    return (min(RBP[tree[0]], _right_weight(tree[2]))
+            if isinstance(tree, list) else math.inf)
 
 
-def is_prec_correct(tree):
+def _is_prec_correct(tree):
     ''' Is tree precedence correct? '''
 
     return (not isinstance(tree, list) or
-            is_prec_correct(tree[1]) and
-            is_prec_correct(tree[2]) and
-            left_weight(tree[2]) > RBP[tree[0]] and
-            right_weight(tree[1]) >= LBP[tree[0]])
+            _is_prec_correct(tree[1]) and
+            _is_prec_correct(tree[2]) and
+            _left_weight(tree[2]) > RBP[tree[0]] and
+            _right_weight(tree[1]) >= LBP[tree[0]])
 
 
 def _top3_weights(tree):
@@ -282,11 +300,11 @@ def _top3_weights(tree):
 
     def _tws(atree):
         ''' Weights of a tree, as string '''
-        return (str(left_weight(atree)) + "..." + str(right_weight(atree))
-                if isinstance(atree, list) else str(inf))
+        return (str(_left_weight(atree)) + "..." + str(_right_weight(atree))
+                if isinstance(atree, list) else " " + chr(8734))  # math.inf
 
     if not isinstance(tree, list):
-        return str(inf)
+        return " " + chr(8734)  # math.inf
     twtext = "\n" + " " * 12 + _tws(tree)
     return twtext + "\n" + _tws(tree[1]) + " "*18 + _tws(tree[2])
 
@@ -363,7 +381,7 @@ def _check_all_parsings(toklis):
         else:
             print("Exactly one should be precedence correct:")
     for tree in all_parse_trees:
-        is_correct = is_prec_correct(tree)
+        is_correct = _is_prec_correct(tree)
         if not is_correct and len(toklis) > _MAX_FOR_PRINTED_TREES:
             continue
         print(s_expr(tree), " correct" if is_correct else " -------", end="")
@@ -381,7 +399,7 @@ def _check_all_parsings(toklis):
 def _add_fakes(tree, non_infix_ops):
     ''' Helper function for run_parser. Add fake tokens to prefix and postfix
         operator in parse tree. It is used for results of parsers that work
-        without fake tokens; not used for the actual parsing.
+        without fake tokens; not used for parsing.
     '''
 
     if not isinstance(tree, list):
@@ -399,9 +417,9 @@ def _add_fakes(tree, non_infix_ops):
 def _print_help():
     ''' Print help information. '''
 
-    module_name = argv[0]
+    module_name = sys.argv[0]
     pyword = "" if module_name and module_name[0] == "." else "python "
-    print("Basic parser '" + path.basename(module_name) + "' " +
+    print("Basic parser '" + os.path.basename(module_name) + "' " +
           "with test driver v. " + _HELPERS_VERSION + ".\nUsage:\n\n" +
           pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] " +
           "'expr'\n")
@@ -425,7 +443,7 @@ def _print_help():
           " binary operators\n" +
           "      taken from nop random operators with nbp random" +
           " binding powers.")
-    srd = str(RAND_DEFAULT)
+    srd = str(_RAND_DEFAULT)
     print("      nbp must be <= 94. Defaults: nop = " + srd + ", nbp = " +
           srd + ", lexpr = " + srd + ".")
     print("-d    Create and parse expression with operators" +
@@ -433,7 +451,8 @@ def _print_help():
           "      rbp (integers in range 6 to 99). bp1 ... bpn have the" +
           " form\n      'lbp rbp'. " +
           "Use '_ rbp' for prefix and 'lbp _' for postfix\n" +
-          "      operators. - Example: The command" +
+          "      operators. A postfix operator can't be immediately " +
+          "followed\n      by a prefix operator. - Example: The command" +
           "\n          python " + module_name + " -d 6 7, _ 9, 8 8\n" +
           "      will parse the expression 'A0 " + _GEN_OP_L +
           "6" + _GEN_OP_C + "7" + _GEN_OP_R + " " + _GEN_OP_L +
@@ -459,24 +478,25 @@ def _get_options():
     quiet = 0
 
     k = 1
-    while len(argv) > k and argv[k].startswith("-") and argv[k] != "--":
-        options.add(argv[k][1:])
+    while (len(sys.argv) > k and sys.argv[k].startswith("-") and
+           sys.argv[k] != "--"):
+        options.add(sys.argv[k][1:])
         k += 1
 
     n_options = k - 1
-    start_of_args = k + 1 if len(argv) > k and argv[k] == "--" else k
+    start_of_args = k + 1 if len(sys.argv) > k and sys.argv[k] == "--" else k
 
     if n_options > 2:
         print("Specify at most two options. See 'python " +
-              argv[0] + " -h'")
+              sys.argv[0] + " -h'")
         return False, options, 0, 0, False
-    if len(options & OUTPUTOPTIONS) > 1:    # '&' is intersection of sets
+    if len(options & _OUTPUTOPTIONS) > 1:    # '&' is intersection of sets
         print("Specify at most one output option. " +
-              "See 'python" + argv[0] + " -h'")
+              "See 'python" + sys.argv[0] + " -h'")
         return False, options, 0, 0, False
 
     for option in options:
-        if option not in OPTIONS:
+        if option not in _OPTIONS:
             print("Invalid option: '-" + option + "'")
             return False, options, 0, 0, False
     if "d" in options and "r" in options:
@@ -513,13 +533,13 @@ def _prepare_command():
         random_or_cl_defined = True
         if quiet < 2:
             print("Using operators with random binding powers.")
-        n_string = (" ".join(argv[start_of_args:])).strip()
+        n_string = (" ".join(sys.argv[start_of_args:])).strip()
         valid, ilbp, irbp, code = _create_random_ops(n_string)
     if "d" in options:
         random_or_cl_defined = True
         if quiet < 2:
             print("Binding powers are defined on the command line.")
-        n_string = (" ".join(argv[start_of_args:])).strip()
+        n_string = (" ".join(sys.argv[start_of_args:])).strip()
         valid, ilbp, irbp, code = _create_expr_from_bp(n_string)
     if "h" in options or "?" in options or "-help" in options:
         _print_help()
@@ -529,21 +549,28 @@ def _prepare_command():
         RBP.update(irbp)
         if quiet < 2:
             print("code is '" + code + "'" if valid else
-                  "Invalid data. Try: " + argv[0] + " -h")
-    else:
-        if not (code := " ".join(argv[start_of_args:]).strip()):
-            print("Nothing to parse. Try option '-h'")
-            valid = False
+                  "Invalid data. Try: " + sys.argv[0] + " -h")
+        return valid, code, quiet, random_or_cl_defined, upsidedown
 
-    return valid, code, quiet, random_or_cl_defined, upsidedown
+    if code := " ".join(sys.argv[start_of_args:]).strip():
+        return valid, code, quiet, random_or_cl_defined, upsidedown
+
+    print("Nothing to parse. Try option '-h'")
+    return False, code, quiet, random_or_cl_defined, upsidedown
 
 
 def _print_result(res, res1, quiet, code, upsidedown):
     ''' Print parse results. Output depends on 'quiet' and 'upsidedown',
         it may include parse tree, all possible parsings, correctness.
+
+        res        --  parse result (tree), possibly without fake tokens
+        res1       --  parse result with fake tokens
+        quiet      --  One of -1, 0, 1, 2. Smaller means more output
+        code       --  Original code to be parsed.
+        upsidedown --  Boolean: Print parse tree upside down?
     '''
 
-    pc_ok = is_prec_correct(res1)  # Correctness is checked with fake tokens
+    pc_ok = _is_prec_correct(res1)  # Correctness is checked with fake tokens
     if quiet <= 0:
         print("Parse result as S-expression; with fake tokens for unary " +
               "operators if present:")
@@ -559,7 +586,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
 
     print("\nParse tree; always without fake tokens:\n")
 
-    btree = FormatBinaryTree(res1)
+    btree = bintree.FormatBinaryTree(res1)
     if upsidedown:     # Display parse tree upside down?
         btree.upsidedown()
     btree.printall()
@@ -577,7 +604,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     while toks() != "$END":
         toklist.append(toks(1))
     toklist.pop()
-    print("\nToken list as used for checking of all parse trees:\n" +
+    print("\nToken list as used for checking the parse trees:\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
     for k, tok in enumerate(toklist[:-1]):
@@ -592,6 +619,12 @@ def _print_result(res, res1, quiet, code, upsidedown):
 
 def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
     ''' Test driver for standard basic parsers (parsers matching "pcp*0*.py").
+
+        parsefun  --  High level parse function, from parser module.
+        tokenizer --  The tokenizer for the parse function (on of 'a' to 'e')
+
+        fake_tokens_inserted  --  set False if the tokenier does not insert
+                                  fake tokens.
     '''
 
     valid, code, quiet, random_or_cl_defined, upsidedown = _prepare_command()
@@ -602,9 +635,9 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
         return 1
 
     if not random_or_cl_defined:
-        with open(path.dirname(path.abspath(__file__)) +
+        with open(os.path.dirname(os.path.abspath(__file__)) +
                   "/" + _BP_JSON_FILENAME, "r") as bp_jsonfile:
-            bp_dict = load(bp_jsonfile)  # Load binding powers from JSON file
+            bp_dict = json.load(bp_jsonfile)  # binding powers from JSON file
 
         LBP.update(bp_dict["LBP"])       # Set values of global LBP, RBP
         RBP.update(bp_dict["RBP"])
