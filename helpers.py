@@ -6,8 +6,8 @@
     Compatible Python versions: 3.8 or higher (because of "walrus" operator).
     There is only minimal error handling. For example, an operator at the
     place of an operand will not be recognized as an error. Instead, the
-    misplaced operator will be treated as an operand.
-    An operand at the place of an operator will raise an exception.
+    misplaced operator will be treated as an operand. On the other hand,
+    an operand at the place of an operator will raise an exception.
 
     See README.
 
@@ -25,7 +25,7 @@ import functools
 import random
 import json
 
-import bintree       #  The class bintree.FormatBinaryTree is used here.
+import bintree    #  The class bintree.FormatBinaryTree is used in 'helpers'.
 
 # === Global constants ===
 
@@ -64,8 +64,8 @@ RBP = {}   # LBP, RBP will be changed in _set_bp, _prepare_command, run_parser.
 def _create_random_ops(n_string):
     ''' Create expression with operators with random binding powers.
 
-        n_string  -- space separated string of zero to three integers
-                     (n operators, n binding powers, operators in expression)
+        n_string  -- space separated string of zero to three integers:
+                     n_operators, n_binding powers, n_operators_in_expression
 
         Return four values: a validity indicator, two dicts (lbp and rbp
         of generated operators) and a randomly created matching expression.
@@ -112,8 +112,8 @@ def _create_expr_from_bp(n_string):
         All binding powers in n_string should be in range 6 to 99.
 
         n_string  --  comma separated list of space separated pairs of numbers
-                      (bnding powers); for unary operators use _ instead of lbp
-                      (prefix operator) or rbp (postfix operator).
+                      (binding powers); for unary operators use '_' instead of
+                      lbp (for prefix operator) or rbp (for postfix operator).
     '''
 
     express = "A0"
@@ -418,17 +418,18 @@ def _print_help():
     ''' Print help information. '''
 
     module_name = sys.argv[0]
-    pyword = "" if module_name and module_name[0] == "." else "python "
+    pyword = ("" if module_name and module_name[0] == "."
+              else os.path.basename(sys.executable) + " ")
     print("Basic parser '" + os.path.basename(module_name) + "' " +
-          "with test driver v. " + _HELPERS_VERSION + ".\nUsage:\n\n" +
-          pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] " +
+          "with test driver v. " + _HELPERS_VERSION + ".\nUsage:\n")
+    print(pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] " +
           "'expr'\n")
     print(pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] " +
           "-r [nop [nbp [lexpr]]]\n\n" +
           pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] -d bp1, " +
           "..., bpn\n\n" + pyword + module_name + "  -h\n\n")
-    print("expr  Expression; enclose in single quotes (double " +
-          "quotes\n      on Windows), separate tokens by spaces.\n\n" +
+    print("expr  Expression to be parsed; enclose in single quotes\n" +
+          "      (double quotes on Windows), separate tokens by spaces.\n\n" +
           "-v    Maximum output: In addition to standard output, " +
           "print\n      subexpressions in order of creation, " +
           "and operator ranges.\n" +
@@ -458,17 +459,16 @@ def _print_help():
           "6" + _GEN_OP_C + "7" + _GEN_OP_R + " " + _GEN_OP_L +
           "_" + _GEN_OP_C + "9" + _GEN_OP_R + " A2 " + _GEN_OP_L +
           "8" + _GEN_OP_C + "8" + _GEN_OP_R + " A3'.\n")
-    print("-h    Print this version information and this help, then exit.\n")
+    print("-h    Print version information and help, then exit.\n")
 
-    print("Any standard basic parser can be used this way.\n" +
-          "Use the end-of-options marker '--' (two hyphens) before expr " +
+    print("Any basic parser can be run this way." +
+          " - Use Python 3.8 or later.")
+    print("Use the end-of-options marker '--' (two hyphens) before expr " +
           "if expr\n" +
           "starts with a hyphen. Example: python pcp_ir_0.py -- '-5 + 6'.\n" +
           "For options -r, -d: Names of generated operators contain their" +
           " lbp,\nrbp values. For example, the operator '" + _GEN_OP_L + "6" +
           _GEN_OP_C + "7" + _GEN_OP_R + "' has lbp=6, rbp=7.")
-    if pyword:
-        print("Use python3 instead of python if required.")
 
 
 def _get_options():

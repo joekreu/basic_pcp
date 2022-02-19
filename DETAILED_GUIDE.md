@@ -4,61 +4,106 @@ date: "February 2022"
 author: "joekreu"
 ---
 
-The repository contains several demo implementations of expression parsers
-based on _binding powers_, _precedence climbing_ and _insertion of fake
-operands_. Very few lines of Python code are enough for the core of a parser
-that creates a parse tree from operands and operators (prefix, infix, postfix)
-with virtually arbitrary binding powers. The parsing algorithms are
-_iterative_, _recursive_, or _mixed_ (_loops_ and _recursion_).
+This repository contains several demo implementations of iterative, recursive
+and mixed (iterative and recursive) expression parsers based on
+_binding powers_, _precedence climbing_ and _insertion of fake operands_.
+Very few lines of Python code are enough for the core of a parser that creates
+a parse tree from operands and operators (prefix, infix, postfix) with
+virtually arbitrary binding powers.
 
 Python 3.8 or higher is required.
 
 ## 1. Introduction
 
 The expressions to be parsed can consist of atomic operands, binary infix
-operators, unary prefix and unary postfix operators, such as
+operators, unary prefix and unary postfix operators. In the following example,
+`&` is a prefix operator, `!` is a postfix operator, and `>`, `*`, `+` are
+infix operators:
 
 ```text
 (1)   & a > 7 * b ! + 2
 ```
 
-where `&` is a prefix operator, `!` is a postfix operator, and `>`, `*`, `+`
-are infix operators.
+Inserting 'fake operands' allows parsing unary operators as infix
+operators.
 
-Parsing is based on _binding powers_ instead of _precedence_ and
-_associativity_. Every infix operator has a _left_ and a _right_ binding power
-(_lbp_ and _rbp_). Binding powers are integers. A greater binding power means
-stronger binding of the operator in the corresponding direction (left or
-right).
+> _Note:_ The parsing algorithms presented here are much more powerful.
+> Using straightforward extensions, parenthesized subexpression, function
+> invocations and _mixfix_ operators, such as `if ... then ... else ...`, can
+> be parsed. Instead of simply fetching the next atomic operand from the token
+> sequence, a whole _primary expression_ can be parsed recursively. This
+> should be investigated separately.
 
-An operator will be _right associative_ if its _rbp_ is less than its _lbp_.
+Generally, precedence climbing parsing of expressions can be controlled by
+_precedence_ (a number) and _associativity_ (_left_ or _right_) of operators,
+or alternatively by _binding powers_. In the latter case, an infix operator
+has a _left_ and a _right binding power_, denoted by _lbp_ and _rbp_.
+Initially, prefix operators have only an _rbp_ and postfix operator have only
+an _lbp_. Typically, _lbp_ and _rbp_ are integers. Binding powers indicate
+the strength of binding in the corresponding direction.
 
-Initially, prefix operators have only an _rbp_, and postfix operators have
-only an _lbp_. Inserting 'fake operands' and defining additional binding
-powers allows parsing unary operators as infix operators. Thus parsing
-of expressions with infix, prefix, and postfix operators is reduced to the
-following simple scheme with `n` operators and `n + 1` operands:
+In simple situations, greater binding powers mean the same as higher
+precedence. Parsing based on binding powers can be more powerful, though.
+Precedence and associativity can be expressed by equivalent definitions of
+binding powers, but not always vice versa. In a way, the definition of general
+binding power based parsing is in the code of the parsers.
+
+In this repository, parsing of expressions with infix, prefix, and postfix
+operators is reduced to the following simple scheme with `n` operators
+and `n + 1` operands:
 
 ```text
 (**)         A0 Op1 A1 Op2 A2 ... Opn An
 ```
 
 where `A0`, `A1`, ... are _atomic operands_ and `Op1`, `Op2`, ... are
-_infix operators_.
+_infix operators_. The case `n = 0` (one atomic operand, no operator) is
+included.
 
-By inserting fake operands as described, the expression `(1)` becomes
+The _parsing rules_ consist of the set of valid operators and their binding
+powers. The rules can be dynamically loaded; e.g., from a text file.
+
+Atomic operands (e.g., numbers and identifiers) consist of one _token_
+only.
+
+The parser's job is to transform the sequence `(**)` into a _parse tree_,
+taking into account the parsing rules.
+
+For example, usually the operator `*` has higher precedence (or greater
+binding powers) than the operator `+`, therefore the expression
+`a + b * c` will be parsed as `a + (b * c)`, not as `(a + b) * c`.
+
+An infix operator is _left associative_ if consecutive occurrences
+of this operator are parsed left to right. The expression `a + b + c` is
+parsed as `(a + b) + c`, because `+` is left associative. The
+exponentiation operator `^` is right associative, therefore `a ^ b ^ c` is
+parsed as `a ^ (b ^ c)`.
+
+An operator will be right associative if its _rbp_ is less than its _lbp_.
+
+Unary operators do not fit directly into the scheme `(**)`. They get adjusted
+to the basic situation by inserting 'fake' operands and 'fake' binding
+powers. The left operand `$PRE` is inserted before a prefix operator,
+and the right operand `$POST` is inserted after a postfix operator.
+Furthermore, prefix operators are assigned a fake left binding power of `100`,
+and postfix operators are assigned a fake right binding power of `100`.
+This procedure virtually converts the unary operators to infix
+operators, with typically very different _lbp_ and _rbp_. 'Normal'
+(user defined) binding powers are required to be less than 100.
+
+By inserting fake operands, the expression `(1)` becomes
 
 ```text
 (2)   $PRE & a > 7 * b ! $POST + 2
 ```
 
-where `$PRE` is a fake left operand for the prefix operator `&` and
-`$POST` is a fake right operand of the postfix operator `!`. The prefix
-operator `$` is assigned an additional left binding power of `100`,
-and the postifx operators `!` is assigned an additional right binding power
-of `100`.
+Binding powers smaller than 6 are also considered 'reserved'. For example,
+a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
+The benefits of other small 'internal' binding powers become visible in more
+elaborate parsers. E.g., the _comma_ can possibly be parsed as an
+_operator_ with small binding powers.
 
-User defined binding powers are required to be integers in range `6 to 99`.
+In summary, user defined binding powers should be integers in range `6 to 99`.
 
 The _lbp_ and _rbp_ values of a specific operator can be equal or differ
 by any number, as long as they are in this range. Binding powers of unary
@@ -79,15 +124,18 @@ on binding powers. Encourage experimentation.
 parsers.
 3. Better understand 'precedence correct' parsing.
 
+Exploring the full potential of precedence climbing parsing based on binding
+powers and token insertion is not the goal of this repository.
+
 ## 2. Tokenization
 
 In a first step, a _tokenizer_ (_lexical scanner_) creates a sequence of
 _tokens_ from the input. In this repository, a token is always an atomic
-operand or an operator (_prefix_, _infix_ or _postfix_).
-A token may consist of one or more characters. Tokens must always be
-separated by spaces.
+operand or an operator. A token may consist of one or more characters. In
+a way, the tokenizers in this repository are very primitive: Tokens must
+always be separated by spaces.
 
-The tokenizers are also responsible for inserting the fake
+On the other hand, the tokenizers are also responsible for inserting the fake
 operands `$PRE` and `$POST`. In addition, a special `$BEGIN` token is placed
 at the beginning, and an `$END` token is placed at the end of the token
 sequence. `$BEGIN` and `$END` can act as a kind of _operators_ in the process
@@ -99,6 +147,11 @@ The complete token sequence generated by the tokenizer for the example (1) is
 ```text
  $BEGIN $PRE & a > 7 * b ! $POST + 2 $END
 ```
+
+ > _Note 1:_
+ > With a 'real' tokenizer (usually based on _regular expressions_) the
+ > requirement for space-separation of tokens can be greatly relaxed. \
+ > _Note 2:_ Only the iterative parsers (see 3.1) reference the `$BEGIN` token.
 
 There are five tokenizers in this repository: \
 `tokenizer_a`, `tokenizer_b`,
@@ -113,28 +166,30 @@ parsers. The tokenizers provide interfaces for the actual parsing.
 There are ten parsers, in separate modules. Nine of them, which shall be
 called _basic parsers_ here, share the same high-level interface:
 
-1. `pcp_ir_0` is _iterative_ and _recursive_.
+1. `pcp_ir_0` is based on iteration (loops) _and_ recursion.
 
-2. `pcp_ir_0_no_ins` is also  _iterative_ and _recursive_. Contrary to
+2. `pcp_ir_0_no_ins` is also based on iteration and recursion. Contrary to
 `pcp_ir_0`, and contrary to the general setting, it is not based on token
 insertion. Instead, special code takes care of prefix and postfix operators.
 
-3. `pcp_it_0_1w` implements an iterative algorithm
+3. `pcp_it_0_1w` implements an iterative (kind of _shunting yard_) algorithm
 with one explicit stack for operands and operators, and one `while` loop.
 
 4. `pcp_it_0_1wg` uses a tokenizer that is implemented as a _generator_ (in
 the sense of Python programming), otherwise it is similar to `pcp_it_0_1w`.
 
 5. `pcp_it_0_2w` implements an iterative algorithm with two explicit stacks,
-one for operands and one for operators, and two nested `while` loops.
+one for operands and one for operators, and two nested `while` loops. After
+minor adjustments a _generator_ as tokenizer could also be used here.
 
-6. `pcp_rec_0_0` is recursive; otherwise, similar to `pcp_ir_0`.
+6. `pcp_rec_0_0` is recursive (without loops); otherwise, similar to
+`pcp_ir_0`.
 
-7. `pcp_rec_0_1` is recursive and more functional (in the sense
+7. `pcp_rec_0_1` is a recursive and more functional parser (in the sense
 of _functional programming_). It uses a Lisp-like _singly linked list_ of
 tokens.
 
-8. `pcp_rec_0_2` is recursive and purely functional. It uses a
+8. `pcp_rec_0_2` is a recursive and purely functional parser. It uses a
 singly linked list of tokens. Tokens are implemented as triples (tuples of
 length 3); operator tokens contain the binding powers as second and third
 component.
@@ -142,7 +197,9 @@ component.
 9. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
 slightly differs from that of `pcp_re_0_2`.
 
-All these parsers accept the same operator definitions.
+All these parsers accept the same operator definitions. They use functions
+from the module `helpers.py`, and they are meant to be run by the same test
+driver.
 
 Analysis of the code and test results support this claim: \
 _All basic parsers accept the same set of expressions and create identical_
