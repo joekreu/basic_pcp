@@ -231,7 +231,7 @@ The rest of this section refers to the nine basic parsers
 
 The syntax definition is loaded from the file `binding_powers.json`
 unless specified otherwise (see options `-r` and `-d` below). Edit the
-definitions if desired.
+definition if desired.
 
 A parser can be run on the command line by
 
@@ -282,7 +282,7 @@ on systems that support `bash` scripts. Run the script without arguments:
 
 #### 3.2.1 Randomly generated expressions (option `-r`)
 
-The command line syntax
+The command
 
 ```shell
 python PARSER_MODULE -r [nop [nbp [lexpr]]]
@@ -314,7 +314,7 @@ The total number of operators is six which is the default for the unspecified
 
 #### 3.2.2 Expressions with explicitly specified binding powers (option `-d`)
 
-The command line syntax
+The command
 
 ```shell
 python PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn

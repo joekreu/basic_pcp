@@ -357,12 +357,12 @@ def _rrange(toklis, pos, crbp):
 def _print_ranges(toklis):
     ''' Print ranges of all operators in toklis.'''
 
-    print("\nRanges of operators - fake operands are included in numbering.")
+    print("\n   Operator ranges" if len(toklis) >1 else "")
     for pos in range(1, len(toklis), 2):
         lpos = _lrange(toklis, pos+1, LBP[toklis[pos]])
         rpos = _rrange(toklis, pos+1, RBP[toklis[pos]])
-        print("{:2} .. {:2}:{:3} .. {:2}".format(lpos, pos+1, toklis[pos],
-                                                 rpos))
+        print("{:2} .. {:2} ({:3}) .. {:2}".format(lpos, pos+1, toklis[pos],
+                                                   rpos))
 
 
 def _check_all_parsings(toklis):
@@ -373,7 +373,7 @@ def _check_all_parsings(toklis):
     if not (all_parse_trees := _makebintrees(toklis)):
         return
     if (nppt := str(len(all_parse_trees))) == "1":
-        print("One possible parse tree. It should be precedence correct.")
+        print("\nOne possible parse tree. It should be precedence correct.")
     else:
         print("\n" + nppt + " possible parse trees are created and checked.")
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
@@ -604,7 +604,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     while toks() != "$END":
         toklist.append(toks(1))
     toklist.pop()
-    print("\nToken list as used for checking the parse trees:\n" +
+    print("\nToken positions as used for checking the parse trees\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
     for k, tok in enumerate(toklist[:-1]):
