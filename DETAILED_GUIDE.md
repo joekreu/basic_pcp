@@ -61,7 +61,8 @@ _infix operators_. The case `n = 0` (one atomic operand, no operator) is
 included.
 
 The _parsing rules_ consist of the set of valid operators and their binding
-powers. The rules can be dynamically loaded; e.g., from a text file.
+powers. The rules can be dynamically loaded, for example, from a `csv`-file or
+a JSON file.
 
 Atomic operands (e.g., numbers and identifiers) consist of one _token_
 only.
@@ -79,7 +80,8 @@ parsed as `(a + b) + c`, because `+` is left associative. The
 exponentiation operator `^` is right associative, therefore `a ^ b ^ c` is
 parsed as `a ^ (b ^ c)`.
 
-An operator will be right associative if its _rbp_ is less than its _lbp_.
+An operator will be right associative if its _rbp_ is less than its _lbp_,
+otherwise it will be left associative.
 
 Unary operators do not fit directly into the scheme `(**)`. They get adjusted
 to the basic situation by inserting 'fake' operands and 'fake' binding
@@ -100,8 +102,9 @@ By inserting fake operands, the expression `(1)` becomes
 Binding powers smaller than 6 are also considered 'reserved'. For example,
 a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
 The benefits of other small 'internal' binding powers become visible in more
-elaborate parsers. E.g., the _comma_ can possibly be parsed as an
-_operator_ with small binding powers.
+elaborate parsers. E.g., the _comma_ can possibly be parsed as a
+_left associative infix operator_ with small binding powers (smaller than
+'real' operators, e.g., with _lbp_ = _rbp_ = 5).
 
 In summary, user defined binding powers should be integers in range `6 to 99`.
 
@@ -111,10 +114,11 @@ operators do not have to be greater than the binding powers of infix
 operators in the same expression.
 
 The parsers return nested lists that represent parse trees.
-These lists can be formatted as Lisp-like _S-expressions_. E.g., parsing
-`5 + 3 ! * 4` will create the list `[+, 5, [*, [!, 3, $POST], 4]]`,
+These lists can be formatted as Lisp-like _S-expressions_. For example,
+parsing `5 + 3 ! * 4` will create the list `[+, 5, [*, [!, 3, $POST], 4]]`,
 or `(+ 5 (* (! 3 $POST) 4))` as S-expression. Without the fake operand
-`$POST` this is `(+ 5 (* (! 3) 4))`.
+`$POST` this is `(+ 5 (* (! 3) 4))`. Fake operands can easily be removed
+from the parse tree. 
 
 ### Goals of this repository
 
@@ -175,8 +179,9 @@ insertion. Instead, special code takes care of prefix and postfix operators.
 3. `pcp_it_0_1w` implements an iterative (kind of _shunting yard_) algorithm
 with one explicit stack for operands and operators, and one `while` loop.
 
-4. `pcp_it_0_1wg` uses a tokenizer that is implemented as a _generator_ (in
-the sense of Python programming), otherwise it is similar to `pcp_it_0_1w`.
+4. `pcp_it_0_1wg` uses a tokenizer that is implemented as a _generator_ in
+the sense of Python programming, i.e., it uses the `yield` statement instead
+of `return`. It is similar to `pcp_it_0_1w`.
 
 5. `pcp_it_0_2w` implements an iterative algorithm with two explicit stacks,
 one for operands and one for operators, and two nested `while` loops. After
@@ -189,13 +194,13 @@ minor adjustments a _generator_ as tokenizer could also be used here.
 of _functional programming_). It uses a Lisp-like _singly linked list_ of
 tokens.
 
-8. `pcp_rec_0_2` is a recursive and purely functional parser. It uses a
-singly linked list of tokens. Tokens are implemented as triples (tuples of
-length 3); operator tokens contain the binding powers as second and third
-component.
+8. `pcp_rec_0_2` is a recursive and purely functional parser. The tokenizer
+for this parser and for `pcp_rec_03` uses a singly linked list of tokens.
+Tokens are implemented as triples (tuples of length 3); operator tokens
+contain the binding powers as second and third component.
 
-9. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
-slightly differs from that of `pcp_re_0_2`.
+1. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
+slightly differs from that of `pcp_re_0_2`. 
 
 All these parsers accept the same operator definitions. They use functions
 from the module `helpers.py`, and they are meant to be run by the same test
@@ -215,31 +220,31 @@ dependencies).
 
 ### 3.2 Usage of the parsers
 
-Use Python 3.8 or later. Put all the necessary files (see section 4) in the
-same directory. The parser modules are not meant to be imported by other
-Python code. The code is not optimized for speed. There is only minimal error
-handling.
+Use Python 3.8 or later (because of the 'walrus'-operator `:=`). Put all the
+necessary files (see section 4) in the same directory. The parser modules are
+not meant to be imported by other Python code. The code is not optimized for
+speed. There is only minimal error handling.
 
-The parser `direct_pcp_ir_0.py` is simply run by
+Run the parsers on the command line. For `direct_pcp_ir_0.py` this is simply
 
 ```shell
 python direct_pcp_ir_0.py
 ```
 
-The rest of this section refers to the nine basic parsers
-(section 3.1).
+The rest of this section refers to the nine basic parsers (section 3.1).
 
 The syntax definition is loaded from the file `binding_powers.json`
 unless specified otherwise (see options `-r` and `-d` below). Edit the
-definition if desired.
+definitions in this file if desired.
 
-A parser can be run on the command line by
+A parser can be run by
 
 ```shell
 python PARSER_MODULE 'CODE'
 ```
 
-where `PARSER_MODULE` is one of the parser modules. Example:
+where `PARSER_MODULE` is one of the parser modules and `CODE` is the code
+to be parsed. Example:
 
 ```shell
 python pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
@@ -254,12 +259,14 @@ the parsing. This is to facilitate experimentation.
 
 > _Note:_ The terms _correctness_ of parsing, _root operator weight_ and
 >_range_, that may occur in the output, are not defined here. _Correctness_
-> is modelled after (but not identical to) the definition of this term in
-> _User Defined Syntax_ by _Annika Aasa_ (1992).
+> is modelled after (but not identical to) the definition of this term by
+> _Annika Aasa_ in _User Defined Syntax_ (1992) or
+> _Precedences in Specifications and Implementations of Programming Languages_
+> (1995).
 
-The call syntax
-`./PARSER_MODULE 'CODE'` may work, depending on the operating system and the
-shell. Set the _executable_ flag of the parser module. An example:
+The call syntax `./PARSER_MODULE 'CODE'` may work, depending on the operating
+system and the shell. Set the _executable_ flag of the parser module. An
+example:
 
 ```shell
 ./pcp_it_0_1w.py '3 + 5 ! * 6 ^ 2'
@@ -291,7 +298,7 @@ python PARSER_MODULE -r [nop [nbp [lexpr]]]
 will parse a generated expression containing _lexpr_ infix operators which are
 taken randomly from a collection of up to _nop_ operators. The _lbp_ and _rbp_
 values of the operators are taken randomly and independently, from the range
-`6 ... 6+nbp-1`. Non-specified values
+`6 ... 6+nbp-1`. Values that are not specified on the command line
 default to 6. The generated operators are of the form `[lbp|rbp]`, where
 `lbp` and `rbp` are the binding powers. E.g., `[6|8]` is an operator with
 `lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . E.g.,
@@ -337,7 +344,8 @@ A0 [7|8] A1 [9|10] A2
 
 where `[7|8]` has `lbp=7` and `rbp=8`, and `[9|10]` has `lbp=9` and `rbp=10`.
 
-Prefix and postfix operators are allowed. Use the help option (`-h`) for details.
+Prefix and postfix operators are allowed. Use the help option (`-h`) for
+details.
 
 ## 4. Structure of the source files. Dependencies
 
@@ -346,6 +354,9 @@ modules `helpers.py` and `bintree.py`, the JSON file
 `binding_powers.json` (syntax), the shell script `run_tests.sh` and the file
 `basic_tests.txt` (test data).
 
+Documentation is in this guide (`DETAILED_GUIDE.md`), in `README.md`
+and in `LICENSE.txt`.
+
 The parser modules are independent of each other.
 The basic parsers import functions and other definitions from the
 module `helpers`, e.g., the tokenizers and the test driver function
@@ -353,7 +364,7 @@ module `helpers`, e.g., the tokenizers and the test driver function
 `FormatBinaryTree` from module `bintree`.
 
 The parser modules invoke the test driver, passing the parse function and the
-correct tokenizer as parameters.
+corresponding tokenizer as parameters.
 
 The `helpers` module uses the following items from system modules: \
 `sys.argv`, `math.inf`, `os.path`, `collections.namedtuple`,

@@ -5,9 +5,9 @@
 
     Compatible Python versions: 3.8 or higher (because of "walrus" operator).
     There is only minimal error handling. For example, an operator at the
-    place of an operand will not be recognized as an error. Instead, the
-    misplaced operator will be treated as an operand. On the other hand,
-    an operand at the place of an operator will raise an exception.
+    place of an operand will raise an exception. Instead, the misplaced
+    operator will be treated as an operand. On the other hand, an operand at
+    the place of an operator will raise an exception.
 
     See README.
 
@@ -52,6 +52,8 @@ _MAX_FOR_PRINTED_TREES = 11
 _RAND_DEFAULT = 6
 
 # === Other global definitions ===
+
+AtomicType = (str, int, float)
 
 Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
@@ -141,18 +143,18 @@ def _create_expr_from_bp(n_string):
 
 
 def s_expr(n_list):
-    ''' Format a nested Python list as Lisp-like S-expression in a string. '''
+    ''' Format a nested Python list (or an iterable) as Lisp-like S-expression
+        in a string. '''
 
-    return ("(" + " ".join([s_expr(p) for p in n_list]) + ")"
-            if isinstance(n_list, list) else n_list)
+    return (str(n_list) if isinstance(n_list, AtomicType) else
+            "(" + " ".join([s_expr(p) for p in n_list]) + ")")
 
 
 def extr_names(plist):
     ''' Replace 'Token' objects in a tree by their name parts. '''
 
-    return ([extr_names(tree) for tree in plist]
-            if isinstance(plist, list) else plist.nam)
-
+    return (plist.nam if isinstance(plist, Token) else
+            [extr_names(tree) for tree in plist])
 
 def c_sex(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
@@ -273,20 +275,20 @@ rrest = lambda llis: llis[1][1]
 
 def _left_weight(tree):
     ''' Recursively compute left tree weight. '''
-    return (min(LBP[tree[0]], _left_weight(tree[1]))
-            if isinstance(tree, list) else math.inf)
 
+    return (math.inf if isinstance(tree, AtomicType) else
+            min(LBP[tree[0]], _left_weight(tree[1])))
 
 def _right_weight(tree):
     ''' Recursively compute right tree weight. '''
-    return (min(RBP[tree[0]], _right_weight(tree[2]))
-            if isinstance(tree, list) else math.inf)
 
+    return (math.inf if isinstance(tree, AtomicType) else
+            min(RBP[tree[0]], _right_weight(tree[2])))
 
 def _is_prec_correct(tree):
     ''' Is tree precedence correct? '''
 
-    return (not isinstance(tree, list) or
+    return (isinstance(tree, AtomicType) or
             _is_prec_correct(tree[1]) and
             _is_prec_correct(tree[2]) and
             _left_weight(tree[2]) > RBP[tree[0]] and
@@ -299,12 +301,12 @@ def _top3_weights(tree):
     '''
 
     def _tws(atree):
-        ''' Weights of a tree, as string '''
-        return (str(_left_weight(atree)) + "..." + str(_right_weight(atree))
-                if isinstance(atree, list) else " " + chr(8734))  # math.inf
+        ''' Weights of a tree, as string. chr(8734) is the infinity sign. '''
+        return (chr(8734) if isinstance(atree, AtomicType) else
+                str(_left_weight(atree)) + "..." + str(_right_weight(atree)))
 
-    if not isinstance(tree, list):
-        return " " + chr(8734)  # math.inf
+    if isinstance(tree, AtomicType):
+        return " " + chr(8734)
     twtext = "\n" + " " * 12 + _tws(tree)
     return twtext + "\n" + _tws(tree[1]) + " "*18 + _tws(tree[2])
 
@@ -313,7 +315,7 @@ def _makebintrees(toklis):
     ''' Create a list of all possible binary trees from a valid token list.
     '''
 
-    if not toklis or not isinstance(toklis, list) or len(toklis) % 2 == 0:
+    if not toklis or isinstance(toklis, AtomicType) or len(toklis) % 2 == 0:
         # This should not happen.
         print("Creation of all parse trees not possible. Invalid argument.")
         return None
@@ -330,15 +332,14 @@ def _makebintrees(toklis):
 def _tokens_in_tree(tree):
     ''' Return number of tokens in tree. '''
 
-    return (1 + _tokens_in_tree(tree[1]) + _tokens_in_tree(tree[2])
-            if isinstance(tree, list) else 1)
+    return (1 if isinstance(tree, AtomicType) else
+            1 + _tokens_in_tree(tree[1]) + _tokens_in_tree(tree[2]))
 
 
 def _root_pos(tree):
     ''' Find position of root operator of tree in the expression. '''
 
-    return _tokens_in_tree(tree[1]) if isinstance(tree, list) else None
-
+    return None if isinstance(tree, AtomicType) else _tokens_in_tree(tree[1])
 
 def _lrange(toklis, pos, clbp):
     ''' range to the left of operator at position 'pos' (one-based). '''
@@ -402,7 +403,7 @@ def _add_fakes(tree, non_infix_ops):
         without fake tokens; not used for parsing.
     '''
 
-    if not isinstance(tree, list):
+    if isinstance(tree, AtomicType):
         return tree
     if len(tree) == 3:
         return [tree[0], _add_fakes(tree[1], non_infix_ops),
@@ -649,16 +650,15 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
     _set_bp()  # Set missing binding powers for unary operators, $BEGIN, $END
     try:
         res = parsefun(tokenizer, code)
-    except (KeyError, IndexError, TypeError) as parseerror:
-        if quiet > 1:
-            print("-")
-        else:
-            if isinstance(parseerror, KeyError):
-                print("Key error (missing or misplaced operator, " +
-                      "missing binding power?):" + str(parseerror))
-            else:
-                print("Index error or type error (missing or misplaced " +
-                      "operand or operator?):\n" + str(parseerror))
+    except KeyError as parseerror:
+        print("-" if quiet > 1 else
+              "Key error (missing or misplaced operator, " +
+              "missing binding power?):" + str(parseerror))
+        return 1
+    except(IndexError, TypeError) as parseerror:
+        print("-" if quiet > 1 else
+              "Index error or type error (missing or misplaced " +
+              "operand or operator?):\n" + str(parseerror))
         return 1
 
     res1 = res if fake_tokens_inserted else _add_fakes(res, non_infix_ops)

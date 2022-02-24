@@ -6,14 +6,14 @@
 
     python direct_pcp_ir_0.py
 
-    Version 2021-01-29. Use with Python 3.5 or higher.
+    Version 2021-02-22. Use with Python 3.5 or higher.
 '''
 
 # Demo binding powers and codes. Tokens in the codes must be space-separated.
 
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
-RBP = {"+": 15, "*": 18, "not": 9, "^": 20}   # integers in range 6 to 99.
-DEMOCODES = ['x + 3.4 * y', 'a + b + c', 'n ^ m ^ k', 'xx + b ! * not c + 1']
+RBP = {"+": 15, "*": 18, "&": 9, "^": 20}   # integers in range 6 to 99.
+DEMOCODES = ['x + 3.4 * y', 'a + b + c', 'n ^ m ^ k', 'xx + b ! * & c + 1']
 
 
 def tokenizer(code):
@@ -63,16 +63,17 @@ def parse_expr(toks, min_rbp=0):
     '''
 
     sub, _ = toks(1), toks(1)       # Advance and assign to sub, advance again
-    while min_rbp < LBP[toks()]:    # toks() should return an operator.
+    while min_rbp < LBP[toks()]:    # toks() should return an operator here.
         sub = [toks(), sub, parse_expr(toks, RBP[toks()])]
     return sub
 
 
-def s_expr(plist):
-    ''' Format a nested list as a Lisp-like S-expression in a string. '''
+def s_expr(n_list):
+    ''' Format a nested Python list (or an iterable) as Lisp-like S-expression
+        in a string. '''
 
-    return ("(" + " ".join([s_expr(p) for p in plist]) + ")"
-            if isinstance(plist, list) else plist)
+    return (str(n_list) if isinstance(n_list, str) else
+            "(" + " ".join([s_expr(p) for p in n_list]) + ")")
 
 
 # Tokenize, parse and print results
