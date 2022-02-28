@@ -17,12 +17,12 @@ a
 3 !
 & t
 3 * x
-a + b ^ c
-a ^ b + c
+a + b^c
+a^b + c
 a + b + c
-a ^ b ^ c
+a^b^c
 a ! + & b %
-3 * & b + c
+3 * &b + c
 2 + 3 % * 5
 a + b % * & c + d
 2 * & 4  +  5 !

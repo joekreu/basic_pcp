@@ -5,13 +5,14 @@
 
     Compatible Python versions: 3.8 or higher (because of "walrus" operator).
     There is only minimal error handling. For example, an operator at the
-    place of an operand will raise an exception. Instead, the misplaced
-    operator will be treated as an operand. On the other hand, an operand at
-    the place of an operator will raise an exception.
+    place of an operand will not raise an exception. Instead, the misplaced
+    operator will be treated as an operand. On the other hand, an operand
+    (i.e., a token without binding powers) at the place of an operator will
+    raise an exception.
 
     See README.
 
-    Version 2022-02-17.
+    Version 2022-02-28.
 '''
 
 # The following items from system imports are used: sys.argv, math.inf,
@@ -25,11 +26,11 @@ import functools
 import random
 import json
 
-import bintree    #  The class bintree.FormatBinaryTree is used in 'helpers'.
+import bintree    #  The class bintree.FormatBinaryTree is used in helpers.py.
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.6, 2022-02-17"
+_HELPERS_VERSION = "0.5.7, 2022-02-28"
 
 # Valid command line options. The operator '|' between sets means 'set union'.
 _OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
@@ -39,10 +40,18 @@ _OPTIONS = frozenset(_OUTPUTOPTIONS | frozenset({"r", "d"}))
 # overwritten if one of the command line option -r, -d is in effect.
 _BP_JSON_FILENAME = "binding_powers.json"
 
-# Strings for generated operators; to be used with options -r and -d.
-_GEN_OP_L = "["               # Left part
-_GEN_OP_C = "|"               # Central part (between binding powers),
-_GEN_OP_R = "]"               # Right part.
+# Characters for generated operators; to be used with options -r and -d.
+_GEN_OP_L = "("               # Left part
+_GEN_OP_C = ";"               # Central part (between binding powers),
+_GEN_OP_R = ")"               # Right part.
+# Caution: Changing these three constants may require changes in the file
+# 'binding_powers.json'. These characters and `_` are considered alpanumeric
+# characters in the process of tokenization. Don't mix them with other special
+# characters in a token (neither operands nor operators).
+# In the documentatation (files README.md and DETAILED_GUIDE.md) the values
+# "(", ";", ")" are assumed.
+
+_GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
 
 # Maximal number of tokens accepted for creation of all possible parse trees.
 # A value of 11 means 5 operators (including unary operators) and 6 operands.
@@ -156,6 +165,7 @@ def extr_names(plist):
     return (plist.nam if isinstance(plist, Token) else
             [extr_names(tree) for tree in plist])
 
+
 def c_sex(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
         'print_subex_creation' is an attribute of the function 'c_sex'.
@@ -180,11 +190,36 @@ def _set_bp():
     LBP["$END"], RBP["$END"] = -1, 0
 
 
+def _raw_toklist(code):
+    ''' Split the code into token, implemented as a 'generator'.'''
+
+    def _ctype(char):
+        return char.isalnum() or char in _GEN_OP_CHARS
+
+    buf = ""
+    for char in code:
+        if char.isspace():
+            if buf:
+                yield buf
+            buf = ""
+        elif not buf:
+            buf = char
+        elif (_ctype(buf[-1]) != _ctype(char) and
+              (not (buf[-1] == "-" and char.isdigit())
+               or len(buf) > 1 and not _ctype(buf[-2]))):
+            yield buf
+            buf = char
+        else:
+            buf += char
+    if buf:
+        yield buf
+
+
 def _prep_toklist(code):
     ''' Split code and add fake tokens to the list; return the list. '''
 
     toklist = ["$BEGIN"]
-    for tok in code.split():
+    for tok in _raw_toklist(code):
         if LBP.get(tok) == 100:
             toklist.append("$PRE")
         toklist.append(tok)
@@ -218,8 +253,8 @@ def tokenizer_b(code):
         operators.
     '''
 
-    toklist = ["$BEGIN"] + code.split() + ["$END"]  # Create token list
-    pos = 0                                         # Initialise state
+    toklist = ["$BEGIN"] + list(_raw_toklist(code)) + ["$END"]
+    pos = 0
 
     def toks(advance=0):
         ''' Function to be returned (a closure). '''
@@ -232,7 +267,9 @@ def tokenizer_b(code):
 
 
 def tokenizer_c(code):
-    ''' A tokenizer for a functional, recursive parser. '''
+    ''' A tokenizer for a functional, recursive parser. It returns a singly
+        linked list, implemented by pairs (Python tuples of length 2).
+    '''
 
     return functools.reduce(lambda x, m: (m, x),
                             reversed(_prep_toklist(code)), None)
@@ -254,7 +291,7 @@ def tokenizer_e(code):
     '''
 
     yield "$BEGIN"
-    for tok in code.split():
+    for tok in _raw_toklist(code):
         if LBP.get(tok) == 100:
             yield "$PRE"
         yield tok
@@ -279,11 +316,13 @@ def _left_weight(tree):
     return (math.inf if isinstance(tree, AtomicType) else
             min(LBP[tree[0]], _left_weight(tree[1])))
 
+
 def _right_weight(tree):
     ''' Recursively compute right tree weight. '''
 
     return (math.inf if isinstance(tree, AtomicType) else
             min(RBP[tree[0]], _right_weight(tree[2])))
+
 
 def _is_prec_correct(tree):
     ''' Is tree precedence correct? '''
@@ -302,7 +341,7 @@ def _top3_weights(tree):
 
     def _tws(atree):
         ''' Weights of a tree, as string. chr(8734) is the infinity sign. '''
-        return (chr(8734) if isinstance(atree, AtomicType) else
+        return (" " + chr(8734) if isinstance(atree, AtomicType) else
                 str(_left_weight(atree)) + "..." + str(_right_weight(atree)))
 
     if isinstance(tree, AtomicType):
@@ -341,6 +380,7 @@ def _root_pos(tree):
 
     return None if isinstance(tree, AtomicType) else _tokens_in_tree(tree[1])
 
+
 def _lrange(toklis, pos, clbp):
     ''' range to the left of operator at position 'pos' (one-based). '''
 
@@ -358,7 +398,7 @@ def _rrange(toklis, pos, crbp):
 def _print_ranges(toklis):
     ''' Print ranges of all operators in toklis.'''
 
-    print("\n   Operator ranges" if len(toklis) >1 else "")
+    print("\n   Operator ranges" if len(toklis) > 1 else "")
     for pos in range(1, len(toklis), 2):
         lpos = _lrange(toklis, pos+1, LBP[toklis[pos]])
         rpos = _rrange(toklis, pos+1, RBP[toklis[pos]])
@@ -373,12 +413,12 @@ def _check_all_parsings(toklis):
 
     if not (all_parse_trees := _makebintrees(toklis)):
         return
-    if (nppt := str(len(all_parse_trees))) == "1":
+    if (nppt := len(all_parse_trees)) == 1:
         print("\nOne possible parse tree. It should be precedence correct.")
     else:
-        print("\n" + nppt + " possible parse trees are created and checked.")
+        print("\nAll " + str(nppt) + " possible parse trees are checked.")
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
-            print("Only correct trees are printed (should be exactly one):")
+            print("Correct trees are printed (there should be exactly one):")
         else:
             print("Exactly one should be precedence correct:")
     for tree in all_parse_trees:
@@ -429,15 +469,21 @@ def _print_help():
           "-r [nop [nbp [lexpr]]]\n\n" +
           pyword + module_name + "  [-v | -w | -s | -u | -q | -qq] -d bp1, " +
           "..., bpn\n\n" + pyword + module_name + "  -h\n\n")
-    print("expr  Expression to be parsed; enclose in single quotes\n" +
-          "      (double quotes on Windows), separate tokens by spaces.\n\n" +
+    print("expr  Expression to be parsed; enclose in single quotes (double" +
+          "\n      quotes on Windows). Whitespace always separates tokens." +
+          "\n      Transition from alphanumeric to special characters and" +
+          " vice\n      versa also separates tokens. In this regard, the " +
+          "characters\n" +
+          "      _ " + _GEN_OP_L + " " + _GEN_OP_C + " " + _GEN_OP_R +
+          " are considered alphanumeric. A minus sign followd by\n" +
+          "      a digit is also also considered alphanumeric.\n\n" +
           "-v    Maximum output: In addition to standard output, " +
           "print\n      subexpressions in order of creation, " +
           "and operator ranges.\n" +
           "-w    Print parse tree upside down, otherwise works like -v.\n" +
           "-s    Standard output, tree representation is included" +
           " (default).\n" +
-          "-u    Print parse tree upside down; otherwise like standard.\n" +
+          "-u    Print parse tree upside down; otherwise standard output.\n" +
           "-q    Less verbose output (less than standard); no parse tree.\n" +
           "-qq   Print only correctness ('+' or '-'). " +
           "For use in test scripts.\n")
@@ -466,7 +512,7 @@ def _print_help():
           " - Use Python 3.8 or later.")
     print("Use the end-of-options marker '--' (two hyphens) before expr " +
           "if expr\n" +
-          "starts with a hyphen. Example: python pcp_ir_0.py -- '-5 + 6'.\n" +
+          "starts with a hyphen. Example: python pcp_ir_0.py -- '-5+6'.\n" +
           "For options -r, -d: Names of generated operators contain their" +
           " lbp,\nrbp values. For example, the operator '" + _GEN_OP_L + "6" +
           _GEN_OP_C + "7" + _GEN_OP_R + "' has lbp=6, rbp=7.")
@@ -521,9 +567,7 @@ def _prepare_command():
     '''
 
     valid = True
-
-    random_or_cl_defined = False
-    # Random operators, or binding powers defined on command line?
+    random_or_cl_defined = False   # option -r or -d in effect?
 
     options_valid, options, quiet, start_of_args, upsidedown = _get_options()
     if not options_valid:
@@ -542,7 +586,7 @@ def _prepare_command():
             print("Binding powers are defined on the command line.")
         n_string = (" ".join(sys.argv[start_of_args:])).strip()
         valid, ilbp, irbp, code = _create_expr_from_bp(n_string)
-    if "h" in options or "?" in options or "-help" in options:
+    if not options.isdisjoint({"h", "?", "-help"}):
         _print_help()
         return False, "", quiet, random_or_cl_defined, False
     if random_or_cl_defined:
@@ -585,7 +629,8 @@ def _print_result(res, res1, quiet, code, upsidedown):
     if quiet > 0:
         return 0 if pc_ok else 1
 
-    print("\nParse tree; always without fake tokens:\n")
+    print("\nParse tree; fake tokens for unary operators (if present) " +
+          "are not printed:\n")
 
     btree = bintree.FormatBinaryTree(res1)
     if upsidedown:     # Display parse tree upside down?

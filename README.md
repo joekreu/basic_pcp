@@ -7,7 +7,7 @@ based on _binding powers_, _precedence climbing_ and
 _insertion of fake operands_.
 
 Very few lines of Python code are enough for the core of a parser
-that creates a parse tree from operands and operators (prefix, infix, postfix)
+that creates parse trees from operands and operators (prefix, infix, postfix)
 with virtually arbitrary binding powers. The parsing algorithms are
 iterative, recursive, or mixed (based on loops _and_ on recursion).
 
@@ -153,7 +153,10 @@ python pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
 ```
 
 Use `python3` instead of `python` if required. Enclose the code in single
-quotes (Linux) or double quotes (Windows?). Place spaces between the tokens.
+quotes or (on Windows?) double quotes. Tokens are separated by whitespace,
+or by transition from an alphanumeric to a special character or vice versa.
+In this regard, `_`, `(`, `)`, `;` are considered alphanumeric. A minus
+sign that is followed by a digit is also considered alphanumeric.
 
 This input will parse the code by the specified parser and generate detailed
 output -- among others, a two-dimensional representation of the parse tree and
@@ -178,10 +181,7 @@ python pcp_ir_0.py -h
 The `bash` shell script `run_tests.sh` reads and parses test codes from the
 file `basic_tests.txt` by the nine basic parsers. It should work
 on systems that support `bash` scripts. Run the script without arguments:
-
-```shell
-./run_tests.sh
-```
+`./run_tests.sh`
 
 #### 4.1 Randomly generated expressions (option `-r`)
 
@@ -210,7 +210,7 @@ The command
 python PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn
 ```
 
-will parse an expression with operators `[lbp1|rbp1]` to `[lbpn|rbpn]` and
+will parse an expression with operators `(lbp1;rbp1)` to `(lbpn;rbpn)` and
 operands `A0`, ..., `An`, where `lbpk`, `rbpk` are the binding
 powers of the `k`-th operator. All binding powers should be in range
 `6 ... 99`. An example:
@@ -222,7 +222,7 @@ python pcp_it_0_1w.py -d 7 8, 9 10
 will create and parse the expression
 
 ```shell
-A0 [7|8] A1 [9|10] A2
+A0 (7;8) A1 (9;10) A2
 ```
 
 Unary operators can also be included. Use the help option (`-h`) for details.
