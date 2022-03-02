@@ -12,7 +12,7 @@
 
     See README.
 
-    Version 2022-02-28.
+    Version 2022-03-02.
 '''
 
 # The following items from system imports are used: sys.argv, math.inf,
@@ -30,9 +30,10 @@ import bintree    #  The class bintree.FormatBinaryTree is used in helpers.py.
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.7, 2022-02-28"
+_HELPERS_VERSION = "0.5.8, 2022-03-02"
 
 # Valid command line options. The operator '|' between sets means 'set union'.
+# The three options -h -? --help are equivalent.
 _OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
 _OPTIONS = frozenset(_OUTPUTOPTIONS | frozenset({"r", "d"}))
 
@@ -48,7 +49,7 @@ _GEN_OP_R = ")"               # Right part.
 # 'binding_powers.json'. These characters and `_` are considered alpanumeric
 # characters in the process of tokenization. Don't mix them with other special
 # characters in a token (neither operands nor operators).
-# In the documentatation (files README.md and DETAILED_GUIDE.md) the values
+# In the documentatation (README.md and DETAILED_GUIDE.md) the values
 # "(", ";", ")" are assumed.
 
 _GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
@@ -58,16 +59,18 @@ _GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
 _MAX_FOR_PRINTED_TREES = 11
 
 # Default value for option -r (random operators). See _create_random_ops.
-_RAND_DEFAULT = 6
+_RAND_N_OP = 6
+_RAND_N_BP = 6
+_RAND_L_EXPR = 6
 
 # === Other global definitions ===
 
-AtomicType = (str, int, float)
+AtomicType = (str, int, float)   # To be used in tests (atom or subree)
 
 Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
-LBP = {}   # Define dictionaries LBP, RBP as global variables. The values of
-RBP = {}   # LBP, RBP will be changed in _set_bp, _prepare_command, run_parser.
+LBP = {}   # Define dictionaries LBP, RBP as global variables. Values of LBP,
+RBP = {}   # RBP will be changed in _set_bp, _prepare_command, run_parser.
 
 
 # === Function definitions ===
@@ -82,7 +85,7 @@ def _create_random_ops(n_string):
         of generated operators) and a randomly created matching expression.
     '''
 
-    n_operators, n_bp, l_expr = _RAND_DEFAULT, _RAND_DEFAULT, _RAND_DEFAULT
+    n_operators, n_bp, l_expr = _RAND_N_OP, _RAND_N_BP, _RAND_L_EXPR
     r_params = n_string.split()
     if n_string:
         try:
@@ -179,7 +182,7 @@ def c_sex(oator, oand1, oand2=None):
 
 
 def _set_bp():
-    ''' Set missing LBP, RBP values for unary operators and for $BEGIN, $END.
+    ''' Set missing LBP, RBP values for unary operators, for $BEGIN and $END.
     '''
 
     for oator in RBP:
@@ -191,7 +194,7 @@ def _set_bp():
 
 
 def _raw_toklist(code):
-    ''' Split the code into token, implemented as a 'generator'.'''
+    ''' Split the code into token; implemented as a 'generator'.'''
 
     def _ctype(char):
         return char.isalnum() or char in _GEN_OP_CHARS
@@ -215,27 +218,28 @@ def _raw_toklist(code):
         yield buf
 
 
-def _prep_toklist(code):
-    ''' Split code and add fake tokens to the list; return the list. '''
+def tokenizer_e(code):
+    ''' This tokenizer is a 'generater' (made so by uses of the 'yield'
+        statement). It is directly used in pcp_it_0_1wg, and extended in
+        tokenizer_a, tokenizer_c and tokenizer_d for use by other parsers.
+    '''
 
-    toklist = ["$BEGIN"]
+    yield "$BEGIN"
     for tok in _raw_toklist(code):
         if LBP.get(tok) == 100:
-            toklist.append("$PRE")
-        toklist.append(tok)
+            yield "$PRE"
+        yield tok
         if RBP.get(tok) == 100:
-            toklist.append("$POST")
-    toklist.append("$END")
-
-    return toklist
+            yield "$POST"
+    yield "$END"
 
 
 def tokenizer_a(code):
     ''' Standard tokenizer, to be used with 4 out of the 9 standard parsers.
-        Return a tokenizer function. Compare with 'tokenizer_e'.
+        Return a tokenizer function.
     '''
 
-    toklist = _prep_toklist(code)
+    toklist = list(tokenizer_e(code))
     pos = 0                      # Initialise state
 
     def toks(advance=0):
@@ -272,7 +276,7 @@ def tokenizer_c(code):
     '''
 
     return functools.reduce(lambda x, m: (m, x),
-                            reversed(_prep_toklist(code)), None)
+                            reversed(list(tokenizer_e(code))), None)
 
 
 def tokenizer_d(code):
@@ -280,24 +284,9 @@ def tokenizer_d(code):
         tokenizer_c, tokens are named tuples (of type "Token"). See above.
     '''
 
-    toklist = [(Token(tok, LBP[tok], RBP[tok]) if tok in LBP
-                else Token(tok, None, None)) for tok in _prep_toklist(code)]
+    toklist = [(Token(tok, LBP[tok], RBP[tok]) if tok in LBP else
+               Token(tok, None, None)) for tok in tokenizer_e(code)]
     return functools.reduce(lambda x, m: (m, x), reversed(toklist), None)
-
-
-def tokenizer_e(code):
-    ''' This tokenizer is a 'generater' (it uses the 'yield' statement),
-        otherwise ist is similar to tokenizer_a.
-    '''
-
-    yield "$BEGIN"
-    for tok in _raw_toklist(code):
-        if LBP.get(tok) == 100:
-            yield "$PRE"
-        yield tok
-        if RBP.get(tok) == 100:
-            yield "$POST"
-    yield "$END"
 
 
 # Four Functions for singly linked list, similar to car, cadr, caddr, cddr in
@@ -437,7 +426,7 @@ def _check_all_parsings(toklis):
             print()
 
 
-def _add_fakes(tree, non_infix_ops):
+def _fakes_to_tree(tree, non_infix_ops):
     ''' Helper function for run_parser. Add fake tokens to prefix and postfix
         operator in parse tree. It is used for results of parsers that work
         without fake tokens; not used for parsing.
@@ -446,12 +435,12 @@ def _add_fakes(tree, non_infix_ops):
     if isinstance(tree, AtomicType):
         return tree
     if len(tree) == 3:
-        return [tree[0], _add_fakes(tree[1], non_infix_ops),
-                _add_fakes(tree[2], non_infix_ops)]
+        return [tree[0], _fakes_to_tree(tree[1], non_infix_ops),
+                _fakes_to_tree(tree[2], non_infix_ops)]
     if len(tree) == 2 and tree[0] in non_infix_ops["pre"]:
-        return [tree[0], "$PRE", _add_fakes(tree[1], non_infix_ops)]
+        return [tree[0], "$PRE", _fakes_to_tree(tree[1], non_infix_ops)]
     if len(tree) == 2 and tree[0] in non_infix_ops["post"]:
-        return [tree[0], _add_fakes(tree[1], non_infix_ops), "$POST"]
+        return [tree[0], _fakes_to_tree(tree[1], non_infix_ops), "$POST"]
     raise ValueError("Invalid parse tree.")
 
 
@@ -491,9 +480,9 @@ def _print_help():
           " binary operators\n" +
           "      taken from nop random operators with nbp random" +
           " binding powers.")
-    srd = str(_RAND_DEFAULT)
-    print("      nbp must be <= 94. Defaults: nop = " + srd + ", nbp = " +
-          srd + ", lexpr = " + srd + ".")
+    print("      nbp must be <= 94. Defaults: nop = " + str(_RAND_N_OP) +
+          ", nbp = " +  str(_RAND_N_BP) + ", lexpr = " + str(_RAND_L_EXPR) +
+          ".")
     print("-d    Create and parse expression with operators" +
           " with specified lbp,\n" +
           "      rbp (integers in range 6 to 99). bp1 ... bpn have the" +
@@ -538,8 +527,9 @@ def _get_options():
               sys.argv[0] + " -h'")
         return False, options, 0, 0, False
     if len(options & _OUTPUTOPTIONS) > 1:    # '&' is intersection of sets
-        print("Specify at most one output option. " +
-              "See 'python" + sys.argv[0] + " -h'")
+        print("Use at most one of the output option: " +
+              " ".join("-" + opt for opt in sorted(list(_OUTPUTOPTIONS))))
+#              "See 'python" + sys.argv[0] + " -h'")
         return False, options, 0, 0, False
 
     for option in options:
@@ -706,6 +696,6 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
               "operand or operator?):\n" + str(parseerror))
         return 1
 
-    res1 = res if fake_tokens_inserted else _add_fakes(res, non_infix_ops)
+    res1 = res if fake_tokens_inserted else _fakes_to_tree(res, non_infix_ops)
 
     return _print_result(res, res1, quiet, code, upsidedown)
