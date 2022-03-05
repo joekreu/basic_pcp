@@ -4,7 +4,7 @@
 # on all test expressions in the file './basic_tests.txt'.
 # The syntax (binding powers) will be loaded from './binding_powers.json'.
 
-Version="0.7, 2021-12-21"
+Version="0.7, 2022-03-05"
 
 # Usage:
 # Start 'run_tests.sh' in the folder containing the required files (the parser
@@ -17,7 +17,7 @@ Version="0.7, 2021-12-21"
 parsers="./pcp*0*.py"          # Pattern for parser files names.
 testcodes="./basic_tests.txt"  # Text file containing the test codes.
 
-askforret=5  # Ask for 'return' after printing the results of $askforret tests
+askforret=6  # Ask for 'return' after printing the results of $askforret tests
 
 # ----------------------------------------------------------------------------
 
@@ -75,8 +75,13 @@ if [[ ! -f "$testcodes" ]]; then
 fi
 
 echo
-echo "The syntax for parsing is defined in \"./binding_powers.json\"."
 echo "The codes to be tested will be loaded from \"$testcodes\"."
+echo "Test codes can be"
+echo "- directly specified expressions, such as a^b + c"
+echo "- randomly generated, such as 'r 4 5 6'"
+echo "- generated from specified binding powers, such as 'd 8 6, 7 9, 6 6'"
+echo "The syntax (operators and binding powers) for directly specified"
+echo "expressions is loaded from \"./binding_powers.json\"."
 
 echo
 echo "A '+' indicates success, a '-' indicates failure of one test for"
@@ -84,9 +89,21 @@ echo "one parser. 'Success' means: The result is 'precedence correct'."
 echo "Results are formatted as Lisp-like S-expressions. Results contain"
 echo "fake operands (\$PRE, \$POST) for unary operators."
 
-while read -r -u 10 code; do
+while IFS= read -r -u 10 code; do
 
-    if [[ -z "${code// }" || "${code:0:1}" = "#" ]]; then
+    opt=""
+
+    if [[ "${code:0:2}" = "r " ]]; then
+        code="${code:2}"
+        opt="-r"
+    elif [[ "${code:0:2}" = "d " ]]; then
+        code="${code:2}"
+        opt="-d"
+    elif [[ "${code:0:2}" = "  " ]]; then
+        code="${code:2}"
+    fi
+
+    if [[ -z "${code// }" || "${code:0:1}" = "#" ]] ; then
         continue
     fi
 
@@ -97,10 +114,15 @@ while read -r -u 10 code; do
 
     ncodes=$((ncodes + 1))
     echo
-    echo -n "Test code $ncodes:" "'$code'" "   "
+    echo -n "Test code $ncodes:" "$opt"
+    if [[ "$opt" = "" ]] ; then
+        echo -n "'$code' "
+    else
+        echo -n " $code "
+    fi
     for parser in $parsers; do
         ntests=$((ntests + 1))
-        res=$($parser "-qq" "$code")
+        res=$($parser "-qq" "$opt" "$code")
         if [[ "$res" = "+" ]] ; then
             ncorrect=$((ncorrect + 1))
         fi
@@ -108,11 +130,15 @@ while read -r -u 10 code; do
     done
     if [[ "$res" = "+" ]] ; then
         echo
-        sexpr=$($parser "-q" "$code")
-        echo "Result: " "${sexpr:4}"
+        sexpr=$($parser "-q" "$opt" "$code")
+        if [[ "$opt" = "" ]] ; then
+            echo "Result: " "${sexpr:4}"
+        else
+            echo  "$sexpr"
+        fi        
     fi
 
-done 10< $testcodes
+done 10< "$testcodes"
 
 echo
 read -r -p "Press return to continue ..."
@@ -122,8 +148,8 @@ echo "Summary"
 echo "-------"
 echo "$ncodes test codes loaded from the file \"$testcodes\"."
 echo "$nparsers parsers (files matching \"$parsers\") run on each test code."
-echo "$ntests tests run (should be = $ncodes * $nparsers)."
+echo -n "$ntests tests run - should be $ncodes * $nparsers = " 
+echo $((ncodes * nparsers))
 echo "$ncorrect results are precedence correct."
 
 exit
-

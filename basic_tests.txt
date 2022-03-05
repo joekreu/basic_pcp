@@ -1,41 +1,75 @@
-# Test data (expressions) for basic parsers
-# =========================================
+# Test data for basic parsers
+# ===========================
 
-# The test data are meant to be used with the bash script 'run_tests.sh'.
+# These test data are meant to be used with the bash script 'run_tests.sh'.
 
-# Empty lines and lines starting with # will be ignored.
-# The other lines contain test expressions (one test per line).
+# Empty lines and lines starting with # (comments) will be ignored.
+# The other lines contain one tests each. Do not quote the tests.
+
+# Test codes can be
+#   - directly specified expressions, such as: a^b + c
+#   - randomly generated; the line must start with 'r ', such as: r 4 5 6
+#   - generated from specified binding powers; the line must start with
+#     'd ', such as: d 8 6, 7 9, 6 6
+
+# Lines starting with 'r ' or 'd ' correspond to expressions created with
+# the options -r, -d, resp. on the command line. Start a basic parser with
+# option '-h' for more information.
+# Although the option '-r' without following values is ok on the command line,
+# a simple letter 'r' in the first columns of an otherwise empty line will
+# not work here. Directly specified expressions can be indented.
+
 # Parse results will be considered 'correct' if they are 'precedence correct'.
 # See function 'is_prec_correct' and comments in the code of 'helpers.py'.
 
-# Always separate tokens by one or more spaces. Edit operator definitions in
-# 'binding_powers.json' if required.
+# In directly specified expressions it is safe to always separate tokens by
+# one or more spaces. Transition of an alphanumeric character to a special
+# character or vice versa will also separate tokens. So 'a*b!' and 'a * b !'
+# are equivalent. The four characters '_ ( ) ;' are considered alphanumeric
+# in this regard. A minus sign that is followed by a digit is also considered
+# alphanumeric.
 
-# Version: 2021-12-13.
+# Edit operator definitions in 'binding_powers.json' if required.
 
-a
-3 !
-& t
-3 * x
-a + b^c
-a^b + c
-a + b + c
-a^b^c
-a ! + & b %
-3 * &b + c
-2 + 3 % * 5
-a + b % * & c + d
-2 * & 4  +  5 !
-2 * 4  +  5 !
-2 ! !
-& not a ! %
-not not X % and not Y !
-4 * & a + b
-33 ^ not a and b
-a ^ b * c + d and e
-a and b + c * d ^ e !
-a * & 4 + 5 + 6 % * 2
-a := 4 + 9
-b * a := 4 + 9
+# Version: 2022-03-05.
+
+  a
+  3 !
+  & t
+  3 * x
+  a + b^c
+  a^b + c
+  a + b + c
+  a^b^c
+  a ! + & b %
+  3 * &b + c
+  2 + 3 % * 5
+  a + b % * & c + d
+  2 * &4  +  5!
+  2*4  +  5!
+  2 ! !
+  & not a ! %
+  not not X % and not Y !
+  4 * & a + b
+  33 ^ not a and b
+  a^b*c + d and e
+  a and b + c*d^e!
+  a * & 4 + 5 + 6 % * 2
+  a := 4 + 9
+  d * a := 4 + 9
+
+r 6
+r 3 3 3
+r 4 5 6
+
+# The preceding code line corresponds to the command 
+# python3 PARSER_FILE  -q -r 4 5 6
+
+d 8 8, 7 7, 6 6, 7 7
+d 10 10,11 6,7 7,8 8
+d 6 8,_ 7, 8 8, 12 _, 7 7
+
+# The preceding code line corresponds to the command 
+# python3 PARSER_FILE  -q -d 6 8,_ 7, 8 8, 12 _, 7 7
 
 # End

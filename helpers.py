@@ -566,13 +566,13 @@ def _prepare_command():
     c_sex.print_subex_creation = (quiet < 0)  # Create a function attribute.
     if "r" in options:
         random_or_cl_defined = True
-        if quiet < 2:
+        if quiet < 1:
             print("Using operators with random binding powers.")
         n_string = (" ".join(sys.argv[start_of_args:])).strip()
         valid, ilbp, irbp, code = _create_random_ops(n_string)
     if "d" in options:
         random_or_cl_defined = True
-        if quiet < 2:
+        if quiet < 1:
             print("Binding powers are defined on the command line.")
         n_string = (" ".join(sys.argv[start_of_args:])).strip()
         valid, ilbp, irbp, code = _create_expr_from_bp(n_string)
@@ -583,7 +583,7 @@ def _prepare_command():
         LBP.update(ilbp)
         RBP.update(irbp)
         if quiet < 2:
-            print("code is '" + code + "'" if valid else
+            print("Code is '" + code + "'" if valid else
                   "Invalid data. Try: " + sys.argv[0] + " -h")
         return valid, code, quiet, random_or_cl_defined, upsidedown
 

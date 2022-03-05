@@ -9,7 +9,7 @@ _insertion of fake operands_.
 Very few lines of Python code are enough for the core of a parser
 that creates parse trees from operands and operators (prefix, infix, postfix)
 with virtually arbitrary binding powers. The parsing algorithms are
-iterative, recursive, or mixed (based on loops _and_ on recursion).
+iterative, recursive, or mixed (based on loops _and_ recursion).
 
 The expressions to be parsed can consist of atomic operands, binary infix
 operators, unary prefix and unary postfix operators. In the following example,
@@ -20,7 +20,7 @@ infix operators:
 (1)   & a > 7 * b ! + 2
 ```
 
-### 1.1 Parsing basics
+### 1.1 Basics of expression parsing
 
 #### 1.1.1 Binding powers
 
@@ -85,8 +85,8 @@ powers and token insertion is not the goal of this project.
 
 ## 2. Prerequisites
 
-Use Python 3.8 or higher. This is enough for the actual parsers. The `bash`
-shell is required for a test script
+Use Python 3.8 or higher. The Python interpreter is enough for the actual
+parsers. The `bash` shell is required for a test script
 
 ## 3. Overview on the parsers
 
@@ -124,9 +124,8 @@ script).
 
 ## 4. Usage of the parsers
 
-Use Python 3.8 or later. Put all project files in one directory, or clone the
-repo.  There is only minimal error handling. Run the parsers from the command
-line.
+Put all project files in one directory, or clone the repo. There is only
+minimal error handling. Run the parsers from the command line.
 
 The parser `direct_pcp_ir_0.py` is simply run by
 
@@ -137,7 +136,7 @@ python direct_pcp_ir_0.py
 The rest of this section refers to the nine basic parsers.
 
 The syntax definition is loaded from the file `binding_powers.json`
-unless specified otherwise (see options `-r` and `-d` below). Edit the
+unless one of the options `-r`, `-d` is specified. See below. Edit the
 definition if desired.
 
 A basic parser can be run by
@@ -158,9 +157,9 @@ or by transition from an alphanumeric to a special character or vice versa.
 In this regard, `_`, `(`, `)`, `;` are considered alphanumeric. A minus
 sign that is followed by a digit is also considered alphanumeric.
 
-This input will parse the code by the specified parser and generate detailed
+This command will parse the code by the specified parser and generate detailed
 output -- among others, a two-dimensional representation of the parse tree and
-indications of the _correctness_ of the parsing. This is to facilitate
+indications of _correctness_ of the parsing. This is to facilitate
 experimentation.
 
 The call syntax
