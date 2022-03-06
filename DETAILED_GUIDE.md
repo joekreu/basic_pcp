@@ -120,7 +120,7 @@ or `(+ 5 (* (! 3 $POST) 4))` as S-expression. Without the fake operand
 `$POST` this is `(+ 5 (* (! 3) 4))`. Fake operands can easily be removed
 from the parse tree. 
 
-### Goals of this repository
+### Goals of this repository. Limitations
 
 1. Find and compare implementations of precedence climbing algorithms based
 on binding powers. Encourage experimentation.
@@ -130,6 +130,8 @@ parsers.
 
 Exploring the full potential of precedence climbing parsing based on binding
 powers and token insertion is not the goal of this repository.
+
+The software does not contain _evaluators_ for the parsed expressions.
 
 ## 2. Tokenization
 

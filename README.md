@@ -24,23 +24,25 @@ infix operators:
 
 #### 1.1.1 Binding powers
 
-An infix operator has a _left_ and a _right binding power_, denoted by
-_lbp_ and _rbp_. Initially, prefix operators have only an _rbp_, and postfix
-operator have only an _lbp_. Typically, _lbp_ and _rbp_ are integers. Binding
-powers indicate the strength of binding in the corresponding direction.
+An infix operator has a _left_ and a _right binding power_ (_lbp_ and _rbp_).
+Initially, prefix operators have
+only an _rbp_, and postfix operators have only an _lbp_. Binding are numbers
+(often integers); they indicate the strength of binding in the corresponding
+direction.
 Frequently, _lbp_ and _rbp_ of a specific operator are equal or differ only by
 one. They can, however, differ by any number, as long as they are in an
-allowed range (here: 6 to 99). Binding powers of unary operators do not have
-to be greater than the binding powers of infix operators in the same
-expression.
+allowed range (here: 6 to 99). Binding powers of unary operators can be smaller
+than the binding powers of infix operators in the same expression.
+
+Parsing based on binding powers can be more powerful than the usual approach
+based on _precedence_ and _associativity_. Precedence and associativity can be
+expressed by equivalent definitions of binding powers, but not always vice
+versa.
+
 
 An infix operator will be right associative if its _rbp_ is less than its
 _lbp_.
 
-In simple situations, greater binding powers mean the same as higher
-precedence. Parsing based on binding powers can be more powerful, though.
-Precedence and associativity can be expressed by equivalent definitions of
-binding powers, but not always vice versa.
 
 #### 1.1.2 Unary operators, token insertion
 
@@ -49,8 +51,8 @@ operand `$POST` is inserted after a postfix operator. Furthermore, prefix
 operators are assigned a fake left binding power of `100`, and postfix
 operators are assigned a fake right binding power of `100`. This procedure
 virtually converts the unary operators to infix operators. The result is an
-alternating sequence of operands and operators, starting and ending with an
-operand.
+alternating sequence of operands and infix operators, starting and ending with
+an operand.
 
 In addition, a special `$BEGIN` token is placed at the beginning, and an
 `$END` token is placed at the end of the token sequence. `$BEGIN` and `$END`
@@ -71,7 +73,7 @@ be formatted as Lisp-like _S-expressions_. E.g., parsing
 or `(+ 5 (* (! 3 $POST) 4))` as S-expression. Without the fake operand
 `$POST` this is `(+ 5 (* (! 3) 4))`.
 
-### 1.2 The main goals of the project
+### 1.2 The main goals of the project. Limitations
 
 1. Find and compare demo implementations of precedence climbing algorithms
 based on binding powers. Encourage experimentation.
@@ -83,10 +85,12 @@ parsers.
 Exploring the full potential of precedence climbing parsing based on binding
 powers and token insertion is not the goal of this project.
 
+The software does not contain _evaluators_ of the parsed expressions.
+
 ## 2. Prerequisites
 
-Use Python 3.8 or higher. The Python interpreter is enough for the actual
-parsers. The `bash` shell is required for a test script
+The Python interpreter (Python 3.8 or higher) is enough for the actual
+parsers. The `bash` shell is required for a test script.
 
 ## 3. Overview on the parsers
 
@@ -124,8 +128,8 @@ script).
 
 ## 4. Usage of the parsers
 
-Put all project files in one directory, or clone the repo. There is only
-minimal error handling. Run the parsers from the command line.
+Put all project files in one directory, or clone the repo. Note that there is
+only minimal error handling. Run the parsers from the command line.
 
 The parser `direct_pcp_ir_0.py` is simply run by
 
@@ -245,4 +249,4 @@ _Precedences in Specifications and Implementations of Programming Languages_
 
 ## 7. More information
 
-See the [Detailed Guide](DETAILED_GUIDE.md) in this repo.
+See the [Detailed Guide](DETAILED_GUIDE) in this repo.
