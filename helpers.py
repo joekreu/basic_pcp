@@ -35,7 +35,7 @@ _HELPERS_VERSION = "0.5.8, 2022-03-02"
 # Valid command line options. The operator '|' between sets means 'set union'.
 # The three options -h -? --help are equivalent.
 _OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
-_OPTIONS = frozenset(_OUTPUTOPTIONS | frozenset({"r", "d"}))
+_OPTIONS = frozenset(_OUTPUTOPTIONS | {"r", "d"})
 
 # Name of JSON file containing binding powers. These binding powers will be
 # overwritten if one of the command line option -r, -d is in effect.
@@ -65,7 +65,7 @@ _RAND_L_EXPR = 6
 
 # === Other global definitions ===
 
-AtomicType = (str, int, float)   # To be used in tests (atom or subree)
+AtomicType = (str, int, float)   # To be used in tests (atom or subree?)
 
 Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
@@ -196,20 +196,25 @@ def _set_bp():
 def _raw_toklist(code):
     ''' Split the code into token; implemented as a 'generator'.'''
 
-    def _ctype(char):
+    def _alnumplus(char):
         return char.isalnum() or char in _GEN_OP_CHARS
 
     buf = ""
-    for char in code:
+    for pos, char in enumerate(code):
         if char.isspace():
             if buf:
                 yield buf
             buf = ""
         elif not buf:
             buf = char
-        elif (_ctype(buf[-1]) != _ctype(char) and
-              (not (buf[-1] == "-" and char.isdigit())
-               or len(buf) > 1 and not _ctype(buf[-2]))):
+        elif (_alnumplus(buf[-1]) != _alnumplus(char)
+               and
+                 (not (buf[-1] == "-" and char.isdigit())
+                  or len(buf) > 1 and not _alnumplus(buf[-2]))
+              or
+                 (not _alnumplus(buf[-1]) and char == "-" and
+                  len(code) > pos+1 and code[pos + 1].isdigit())
+             ):
             yield buf
             buf = char
         else:

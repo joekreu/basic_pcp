@@ -249,4 +249,4 @@ _Precedences in Specifications and Implementations of Programming Languages_
 
 ## 7. More information
 
-See the [Detailed Guide](DETAILED_GUIDE) in this repo.
+See the more detailed document [PARSING](PARSING.md) in this repo.
