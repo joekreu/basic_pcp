@@ -196,9 +196,6 @@ def _set_bp():
 def _raw_toklist(code):
     ''' Split the code into token; implemented as a 'generator'.'''
 
-    def _alnumplus(char):
-        return char.isalnum() or char in _GEN_OP_CHARS
-
     buf = ""
     for pos, char in enumerate(code):
         if char.isspace():
@@ -207,30 +204,29 @@ def _raw_toklist(code):
             buf = ""
         elif not buf:
             buf = char
-        elif (_alnumplus(buf[-1]) != _alnumplus(char)
-               and
-                 (not (buf[-1] == "-" and char.isdigit())
-                  or len(buf) > 1 and not _alnumplus(buf[-2]))
-              or
-                 (not _alnumplus(buf[-1]) and char == "-" and
-                  len(code) > pos+1 and code[pos + 1].isdigit())
-             ):
-            yield buf
-            buf = char
         else:
-            buf += char
+            old_is_alnu = (buf[-1].isalnum() or buf[-1] in _GEN_OP_CHARS or
+                           buf[-1] == "-" and char.isdigit())
+            new_is_alnu = (char.isalnum() or char in _GEN_OP_CHARS or
+                           char == "-" and len(code) > pos+1 and
+                           code[pos+1].isdigit())
+            if old_is_alnu != new_is_alnu:
+                yield buf
+                buf = char
+            else:
+                buf += char
     if buf:
         yield buf
 
 
 def tokenizer_e(code):
-    ''' This tokenizer is a 'generater' (made so by uses of the 'yield'
-        statement). It is directly used in pcp_it_0_1wg, and extended in
+    ''' This tokenizer is a 'generater' (made so by use of the 'yield'
+        keyword). It is directly used in pcp_it_0_1wg, and extended in
         tokenizer_a, tokenizer_c and tokenizer_d for use by other parsers.
     '''
 
     yield "$BEGIN"
-    for tok in _raw_toklist(code):
+    for tok in _raw_toklist(code):   # _raw_toklist(code) is a generator
         if LBP.get(tok) == 100:
             yield "$PRE"
         yield tok
