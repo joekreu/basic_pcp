@@ -299,7 +299,8 @@ the parsing. This is to facilitate experimentation.
 
 The shorter call syntax `./PARSER_MODULE 'CODE'` may work, depending on the
 operating system and the shell. Set the _executable_ flag of the parser
-module. An example:
+module. Check the first line of the parser modules (the `#!`-line).
+An example for this call:
 
 ```shell
 ./pcp_it_0_1w.py '3 + 5! * 6^2'
@@ -352,6 +353,8 @@ with the operands `A0`, `A1`, ..., `A6` and the operators `(7;6)`,
 (6 to 8) and four different operators: `(6;6)`, `(7;6)`, `(8;7)`, `(8;8)`.
 The total number of operators is six which is the default for the unspecified
 `lexpr` value.
+
+Obviously, results obtained with option `-r` are not reproducible.
 
 #### 3.2.2 Expressions with explicitly specified binding powers (option `-d`)
 
