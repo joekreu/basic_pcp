@@ -49,7 +49,7 @@ _GEN_OP_R = ")"               # Right part.
 # 'binding_powers.json'. These characters and `_` are considered alpanumeric
 # characters in the process of tokenization. Don't mix them with other special
 # characters in a token (neither operands nor operators).
-# In the documentatation (README.md and DETAILED_GUIDE.md) the values
+# In the documentatation (README.md and PARSING.md) the values
 # "(", ";", ")" are assumed.
 
 _GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
@@ -65,7 +65,9 @@ _RAND_L_EXPR = 6
 
 # === Other global definitions ===
 
-AtomicType = (str, int, float)   # To be used in tests (atom or subree?)
+AtomicType = (str, int, float)   # To be used in tests (atom or subtree?)
+
+INF_SIGN = chr(8734)             # 8734 is unicode for the infinity-sign
 
 Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
@@ -154,11 +156,15 @@ def _create_expr_from_bp(n_string):
     return True, tlbp, trbp, express
 
 
-def s_expr(n_list):
-    ''' Format a nested Python list (or an iterable) as Lisp-like S-expression
-        in a string. '''
+def _isatomic(subex):
+    return isinstance(subex, AtomicType)  # Def of AtomicType see above.
 
-    return (str(n_list) if isinstance(n_list, AtomicType) else
+
+def s_expr(n_list):
+    ''' Format a nested Python list (or another iterable) as Lisp-like
+        S-expression in a string. '''
+
+    return (str(n_list) if _isatomic(n_list) else
             "(" + " ".join([s_expr(p) for p in n_list]) + ")")
 
 
@@ -220,9 +226,9 @@ def _raw_toklist(code):
 
 
 def tokenizer_e(code):
-    ''' This tokenizer is a 'generater' (made so by use of the 'yield'
-        keyword). It is directly used in pcp_it_0_1wg, and extended in
-        tokenizer_a, tokenizer_c and tokenizer_d for use by other parsers.
+    ''' This tokenizer is a 'generater'.
+        It is directly used in pcp_it_0_1wg, and extended in tokenizer_a,
+        tokenizer_c and tokenizer_d for use by other parsers.
     '''
 
     yield "$BEGIN"
@@ -291,8 +297,8 @@ def tokenizer_d(code):
 
 
 # Four Functions for singly linked list, similar to car, cadr, caddr, cddr in
-# Lisp. To be used with pcp_rec_0_1, pcp_rec_0_2, pcp_rec_0_3. - Note:
-# Assignments of lambda expressions are not considered good Python style.
+# Lisp. To be used with pcp_rec_0_1, pcp_rec_0_2, pcp_rec_0_3. - Note: This
+# style is not "Pythonic". The recommended style would be much more verbose.
 
 first = lambda llis: llis[0]
 second = lambda llis: llis[1][0]
@@ -303,21 +309,21 @@ rrest = lambda llis: llis[1][1]
 def _left_weight(tree):
     ''' Recursively compute left tree weight. '''
 
-    return (math.inf if isinstance(tree, AtomicType) else
+    return (math.inf if _isatomic(tree) else
             min(LBP[tree[0]], _left_weight(tree[1])))
 
 
 def _right_weight(tree):
     ''' Recursively compute right tree weight. '''
 
-    return (math.inf if isinstance(tree, AtomicType) else
+    return (math.inf if _isatomic(tree) else
             min(RBP[tree[0]], _right_weight(tree[2])))
 
 
 def _is_prec_correct(tree):
     ''' Is tree precedence correct? '''
 
-    return (isinstance(tree, AtomicType) or
+    return (_isatomic(tree) or
             _is_prec_correct(tree[1]) and
             _is_prec_correct(tree[2]) and
             _left_weight(tree[2]) > RBP[tree[0]] and
@@ -330,12 +336,12 @@ def _top3_weights(tree):
     '''
 
     def _tws(atree):
-        ''' Weights of a tree, as string. chr(8734) is the infinity sign. '''
-        return (" " + chr(8734) if isinstance(atree, AtomicType) else
+        ''' Weights of a tree, as string. INF_SIGN is the infinity sign. '''
+        return (" " + INF_SIGN if _isatomic(atree) else
                 str(_left_weight(atree)) + "..." + str(_right_weight(atree)))
 
-    if isinstance(tree, AtomicType):
-        return " " + chr(8734)
+    if _isatomic(tree):
+        return " " + INF_SIGN
     twtext = "\n" + " " * 12 + _tws(tree)
     return twtext + "\n" + _tws(tree[1]) + " "*18 + _tws(tree[2])
 
@@ -344,7 +350,7 @@ def _makebintrees(toklis):
     ''' Create a list of all possible binary trees from a valid token list.
     '''
 
-    if not toklis or isinstance(toklis, AtomicType) or len(toklis) % 2 == 0:
+    if not toklis or _isatomic(toklis) or len(toklis) % 2 == 0:
         # This should not happen.
         print("Creation of all parse trees not possible. Invalid argument.")
         return None
@@ -361,14 +367,14 @@ def _makebintrees(toklis):
 def _tokens_in_tree(tree):
     ''' Return number of tokens in tree. '''
 
-    return (1 if isinstance(tree, AtomicType) else
+    return (1 if _isatomic(tree) else
             1 + _tokens_in_tree(tree[1]) + _tokens_in_tree(tree[2]))
 
 
 def _root_pos(tree):
     ''' Find position of root operator of tree in the expression. '''
 
-    return None if isinstance(tree, AtomicType) else _tokens_in_tree(tree[1])
+    return None if _isatomic(tree) else _tokens_in_tree(tree[1])
 
 
 def _lrange(toklis, pos, clbp):
@@ -433,7 +439,7 @@ def _fakes_to_tree(tree, non_infix_ops):
         without fake tokens; not used for parsing.
     '''
 
-    if isinstance(tree, AtomicType):
+    if _isatomic(tree):
         return tree
     if len(tree) == 3:
         return [tree[0], _fakes_to_tree(tree[1], non_infix_ops),
@@ -466,7 +472,7 @@ def _print_help():
           "characters\n" +
           "      _ " + _GEN_OP_L + " " + _GEN_OP_C + " " + _GEN_OP_R +
           " are considered alphanumeric. A minus sign followd by\n" +
-          "      a digit is also also considered alphanumeric.\n\n" +
+          "      a digit is also considered alphanumeric.\n\n" +
           "-v    Maximum output: In addition to standard output, " +
           "print\n      subexpressions in order of creation, " +
           "and operator ranges.\n" +

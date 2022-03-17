@@ -6,10 +6,12 @@ The repository contains several demo implementations of expression parsers
 based on _binding powers_, _precedence climbing_ and
 _insertion of fake operands_.
 
-Very few lines of Python code are enough for the core of a parser
-that creates parse trees from operands and operators (prefix, infix, postfix)
-with virtually arbitrary binding powers. The parsing algorithms are
-iterative, recursive, or mixed (based on loops _and_ recursion).
+The term _precedence climbing_ is used here in a generic sense. The
+algorithms can be iterative, recursive, or mixed (with loops _and_ recursion).
+
+Very few lines of Python code are enough for the core of a parser that creates
+parse trees from operands and operators with virtually arbitrary binding
+powers. 
 
 The expressions to be parsed can consist of atomic operands, binary infix
 operators, unary prefix and unary postfix operators. In the following example,
@@ -20,7 +22,9 @@ infix operators:
 (1)   & a > 7 * b ! + 2
 ```
 
-### 1.1 Basics of expression parsing
+The text [PARSING](PARSING.md) is an extended version of most parts of this README.
+
+### 1.1 Basics of precedence climbing parsing based on binding powers
 
 #### 1.1.1 Binding powers
 
@@ -33,12 +37,11 @@ one. They can, however, differ by any number, as long as they are in an
 allowed range (here: 6 to 99). Binding powers of unary operators can be smaller
 than the binding powers of infix operators in the same expression.
 
-Parsing based on binding powers can be more powerful than the usual approach
-based on _precedence_ and _associativity_. Precedence and associativity can be
-expressed by equivalent definitions of binding powers, but not always vice
-versa.
-
-
+Parsing based on _lbp_ and _rbp_ (two numbers) can be more
+powerful than the approach
+based on _precedence_ (in the specific sense: one number) and _associativity_
+(two values: _left_ or
+_right_). Associativity can be expressed in terms of binding powers:
 An infix operator will be right associative if its _rbp_ is less than its
 _lbp_.
 
@@ -71,7 +74,7 @@ be formatted as Lisp-like _S-expressions_. E.g., parsing `5 + 3 ! * 4` will
 create the list `[+, 5, [*, [!, 3, $POST], 4]]`, or `(+ 5 (* (! 3 $POST) 4))`
 as S-expression. Without the fake operand `$POST` this is `(+ 5 (* (! 3) 4))`.
 
-### 1.2 The main goals of the project. Limitations
+### 1.2 Main goals of the project
 
 1. Find and compare demo implementations of precedence climbing algorithms
 based on binding powers. Encourage experimentation.
@@ -80,16 +83,18 @@ based on binding powers. Encourage experimentation.
 parsers.
 4. Better understand the meaning of _precedence correct_ parsing.
 
-Exploring the full potential of precedence climbing parsing based on binding
-powers and token insertion is not the goal of this project. \
-Context-free grammars, Backus normal form and the like are not considered.
+### 1.3 Limitations
 
-The software does not contain _evaluators_ for the parsed expressions.
+Exploring the full potential of precedence climbing parsing based on binding
+powers and token insertion is not the goal of this project.
+_Pratt parsing_ (although related), _context-free grammars_,
+_Backus normal forms_ and the like are not
+considered. The software does not contain _evaluators_ for the parse trees.
 
 ## 2. Prerequisites
 
 The Python interpreter (version 3.8 or higher) with the standard library is
-enough for the actual parsers. The `bash` shell is required for a test script.
+enough for the parsers. The `bash` shell is required for a test script.
 
 ## 3. Overview on the parsers
 
@@ -107,9 +112,10 @@ algorithms.
 (without loops) and more or less _functional_ (in the sense of functional
 programming).
 
-All these parsers accept the same JSON syntax for operator definitions.
+All these parsers accept the same syntax for operator definitions.
 
-Analysis of the code and test results support this claim: \
+Analysis of the code and test results support this claim:
+
 _All basic parsers accept the same set of expressions and create identical_
 _results with identical input, provided they use identical operator and_
 _binding power definitions. In the parse process, they create_
@@ -127,69 +133,65 @@ script).
 
 ## 4. Usage of the parsers
 
-Put all project files in one directory, or clone the repo. Note that there is
+All project files should be placed in the same directory. Note that there is
 only minimal error handling. Run the parsers from the command line.
 
 The parser `direct_pcp_ir_0.py` is simply run by
 
 ```shell
-python direct_pcp_ir_0.py
+python3 direct_pcp_ir_0.py
 ```
 
 The rest of this section refers to the nine basic parsers.
 
 The syntax definition is loaded from the file `binding_powers.json`
-unless one of the options `-r`, `-d` in effect. See below. Edit the
-definition if desired.
+unless one of the options `-r`, `-d` is in effect (see below). Edit the
+syntax definition if desired.
 
-A basic parser can be run by
+A parser can be run by
 
 ```shell
-python PARSER_MODULE 'CODE'
+python3 PARSER_MODULE 'CODE'
 ```
 
 where `PARSER_MODULE` is one of the basic parser modules. Example:
 
 ```shell
-python pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
+python3 pcp_rec_0_0.py '3 + 5! * 6^2'
 ```
 
-Use `python3` instead of `python` if required. Enclose the code in single
+Use `python` instead of `python3` if required. Enclose the code in single
 quotes or (on Windows?) double quotes. Tokens are separated by whitespace,
 or by transition from an alphanumeric to a special character or vice versa.
-In this regard, `_`, `(`, `)`, `;` are considered alphanumeric. A minus
-sign that is followed by a digit is also considered alphanumeric.
+In this regard, _underscore_, _parentheses_ and _semicolon_ are considered
+alphanumeric. A minus sign followed by a digit is also considered
+alphanumeric.
 
-This command will parse the code by the specified parser and generate detailed
-output -- among others, a two-dimensional representation of the parse tree and
-indications of _correctness_ of the parsing. This is to facilitate
-experimentation.
+This above command will parse the code by the specified parser and generate
+detailed output -- among others, a two-dimensional representation of the parse
+tree and indications of _correctness_ of the parsing.
 
 The call syntax
 `./PARSER_MODULE 'CODE'` may work, depending on the operating system and the
 shell. An example:
 
 ```shell
-./pcp_it_0_1w.py '3 + 5 ! * 6 ^ 2'
+./pcp_it_0_1w.py '3 + 5! * 6^2'
 ```
 
 The output can be made more verbose or more concise. Use the option `-h` (with
-any basic parser module) to find out all ways to run the parsers:
+any basic parser module) to find out all ways to run the parsers.
 
-```shell
-python pcp_ir_0.py -h
-```
-
-The `bash` shell script `run_tests.sh` reads test codes from the
-file `basic_tests.txt` and parses it by the nine basic parsers. It should work
-on systems that support `bash` scripts. Run the script without arguments.
+The `bash` shell script `run_tests.sh` reads test codes from the file
+`basic_tests.txt` and processes them with the nine basic parsers. It should
+work on systems that support `bash` scripts. Run the script without arguments.
 
 #### 4.1 Randomly generated expressions (option `-r`)
 
 The command
 
 ```shell
-python PARSER_MODULE -r [nop [nbp [lexpr]]]
+python3 PARSER_MODULE -r [nop [nbp [lexpr]]]
 ```
 
 will parse a generated expression containing _lexpr_ infix operators which are
@@ -198,7 +200,7 @@ values of the operators are taken randomly and independently, from the range
 `6 ... 6+nbp-1`. Non-specified values default to 6. An example:
 
 ```shell
-python pcp_it_0_2w.py -r 4 3
+python3 pcp_it_0_2w.py -r 4 3
 ```
 
 Results of calls with option `-r` are not reproducible.
@@ -208,7 +210,7 @@ Results of calls with option `-r` are not reproducible.
 The command
 
 ```shell
-python PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn
+python3 PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn
 ```
 
 will parse an expression with operators `(lbp1;rbp1)` to `(lbpn;rbpn)` and
@@ -217,7 +219,7 @@ powers of the `k`-th operator. All binding powers should be in range
 `6 ... 99`. For example,
 
 ```shell
-python pcp_it_0_1w.py -d 7 8, 9 10
+python3 pcp_it_0_1w.py -d 7 8, 9 10
 ```
 
 will create and parse the expression
@@ -238,16 +240,11 @@ See [LICENSE](LICENSE.txt).
 This project was inspired by works on precedence climbing and Pratt parsing
 by _Theodore Norvell_, _Aleksey Kladov_
 (_matklad_), _Andy Chu_, _Eli Bendersky_, _Fredrik Lundh_ (_effbot_),
-_Bob Nystrom_, _Annika Aasa_ and others. See section 5 in the text
-[PARSING](PARSING.md) in this repo.
+_Annika Aasa_ and others. See section 5 in the text
+[PARSING](PARSING.md).
 
 The _correctness test_ and the definitions of _operator ranges_ (see the
-functions `_is_prec_correct`, `_lrange`, `_rrange` in the module `helpers.py`)
+functions `_is_prec_correct`, `_lrange`, `_rrange` in `helpers.py`)
 are adapted from definitions by _Annika Aasa_ in
 _Precedences in Specifications and Implementations of Programming Languages_
 (1995).
-
-## 7. More information
-
-The text [PARSING](PARSING.md) is an extended version of most parts of this
-README.

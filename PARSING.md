@@ -11,6 +11,11 @@ Very few lines of Python code are enough for the core of a parser that creates
 a parse tree from operands and operators (prefix, infix, postfix) with
 virtually arbitrary binding powers.
 
+The term _precedence_ is used here in a generic sense: _finding a particular_
+_parse tree for otherwise ambiguous expressions, based on some kind of_
+_specification oft the binding strengths of the operators_. See the note at
+the end of section 3.1.
+
 Python 3.8 or higher is required.
 
 ## 1. Introduction
@@ -35,13 +40,17 @@ Inserting 'fake operands' allows parsing unary operators as infix operators.
 > operands. \
 > This should be investigated separately.
 
-Generally, precedence climbing parsing of expressions can be controlled by
-_precedence_ (a number) and _associativity_ (_left_ or _right_) of operators,
-or alternatively by _binding powers_. In the latter case, an infix operator
-has a _left_ and a _right binding power_, denoted by _lbp_ and _rbp_.
-Initially, prefix operators have only an _rbp_ and postfix operator have only
-an _lbp_. Typically, _lbp_ and _rbp_ are integers. Binding powers indicate
-the strength of binding in the corresponding direction.
+Generally, precedence climbing parsing of expressions can be controlled in one
+of the following two ways (other ways might exist):
+
+1. An operator has a _precedence_ (in the specific sense, i.e., a number) and
+an _associativity_ (one of the two values: _left_ or _right_). In some
+settings, _non_ can be a third possible value of _associativity_.
+1. _Binding powers_: An infix operator has a _left_ and a _right_
+_binding power_, denoted by _lbp_ and _rbp_. Initially, prefix operators have
+only an _rbp_ and postfix operator have only an _lbp_. Binding powers are
+numbers, typically integers. Binding powers indicate the strength of binding
+in the corresponding direction.
 
 In simple situations, greater binding powers mean the same as higher
 precedence. Parsing based on binding powers can be more powerful, though.
@@ -73,6 +82,10 @@ taking into account the parsing rules.
 For example, usually the operator `*` has higher precedence (or greater
 binding powers) than the operator `+`, therefore the expression
 `a + b * c` should be parsed as `a + (b * c)`, not as `(a + b) * c`.
+
+> _Note:_ The parentheses are used here only to indicate the precedence. The
+> parsers in the repo can't process parenthesized subexpression. However, they
+> can be extended to be able to.
 
 An infix operator is _left associative_ if consecutive occurrences
 of this operator are parsed left to right. The expression `a + b + c` is
@@ -232,13 +245,22 @@ All these parsers accept the same operator definitions. They use functions
 from the module `helpers.py`, and they are meant to be run by the same test
 driver.
 
-Analysis of the code and test results support this claim: \
-_All basic parsers accept the same set of expressions and create identical_
-_results with identical input, provided they use identical operator and_
-_binding power definitions. In the parse process, they create_
-_subexpressions in the same order_.
+Analysis of the code and test results support this claim:
+
+> _All basic parsers accept the same set of expressions and create identical_
+> _results with identical input, provided they use identical operator and_
+> _binding power definitions. In the parse process, they create_
+> _subexpressions in the same order_.
 
 This should also justify the use of the generic term _precedence climbing_.
+
+> _Note:_ The term _precedence_ is used in both a generic sense and a
+> specific sense. In the generic sense, it is about finding a particular parse
+> tree for otherwise ambiguous expressions based on some kind of binding
+> strengths of the operators. In the specific sense, _precedence_ is a number
+> assigned to an operator. The parser in this repo are _precedence parsers_
+> in the generic sense, but they are not based on _precedences_ in the
+> specific sense.
 
 The remaining parser, `direct_pcp_ir_0`, uses the algorithm of `pcp_ir_0` to
 parse some 'hard coded' examples. It is 'self-contained' (without
@@ -257,7 +279,7 @@ code is not optimized for speed. There is only minimal error handling.
 Run the parsers on the command line. For `direct_pcp_ir_0.py` this is simply
 
 ```shell
-python direct_pcp_ir_0.py
+python3 direct_pcp_ir_0.py
 ```
 
 The rest of this section refers to the nine basic parsers (section 3.1).
@@ -269,17 +291,17 @@ definitions in this file if desired.
 A basic parser can be run by
 
 ```shell
-python PARSER_MODULE 'CODE'
+python3 PARSER_MODULE 'CODE'
 ```
 
 where `PARSER_MODULE` is one of the basic parser modules and `CODE` is the
 code to be parsed. Example:
 
 ```shell
-python pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
+python3 pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
 ```
 
-Use the correct interpreter name (e.g., `python3` instead of `python` if
+Use the correct interpreter name (e.g., `python` instead of `python3` if
 this is required). Enclose the code in single quotes (Linux) or double quotes
 (Windows?). Tokens are separated by whitespace, or by transition from an
 alphanumeric to a special character or vice versa. In this regard, the four
@@ -311,7 +333,7 @@ parsers. There are several options that control the output - the output can be
 more verbose or more concise.
 
 ```shell
-python pcp_ir_0.py -h
+python3 pcp_ir_0.py -h
 ```
 
 The `bash` shell script `run_tests.sh` reads and parses test codes from the
@@ -327,7 +349,7 @@ on systems that support `bash` scripts. Run the script without arguments:
 The command
 
 ```shell
-python PARSER_MODULE -r [nop [nbp [lexpr]]]
+python3 PARSER_MODULE -r [nop [nbp [lexpr]]]
 ```
 
 will parse a generated expression containing _lexpr_ infix operators which are
@@ -339,7 +361,7 @@ default to 6. The generated operators are of the form `(lbp;rbp)`, where
 `lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . E.g.,
 
 ```shell
-python pcp_it_0_2w.py -r 4 3
+python3 pcp_it_0_2w.py -r 4 3
 ```
 
 could create and parse the expression
@@ -361,7 +383,7 @@ Obviously, results obtained with option `-r` are not reproducible.
 The command
 
 ```shell
-python PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn
+python3 PARSER_MODULE -d lbp1 rbp1, lbp2 rbp2, ..., lbpn rbpn
 ```
 
 will parse an expression with operators `(lbp1;rbp1)` to `(lbpn;rbpn)` and
@@ -370,7 +392,7 @@ powers of the `k`-th operator. All binding powers should be in range
 `6 ... 99`. For example,
 
 ```shell
-python pcp_it_0_1w.py -d 7 8, 9 10
+python3 pcp_it_0_1w.py -d 7 8, 9 10
 ```
 
 will create and parse the expression
@@ -459,6 +481,6 @@ _Precedences in specifications and implementations of programming languages_
 <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.3542>
 
 [11] Jean-Marc Bourguet, _Operator precedence parsers_\
-<https://github.com/bourguet/operator_precedence_parsing> (on GitHub).
+<https://github.com/bourguet/operator_precedence_parsing>.
 
 ---
