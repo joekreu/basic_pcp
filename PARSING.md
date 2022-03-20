@@ -413,7 +413,7 @@ modules `helpers.py` and `bintree.py`, the JSON file
 `binding_powers.json` (syntax), the shell script `run_tests.sh` and the file
 `basic_tests.txt` (test data).
 
-Documentation is in this guide (`DETAILED_GUIDE.md`), in `README.md`
+Documentation is in this guide (`PARSING.md`), in `README.md`
 and in `LICENSE.txt`.
 
 The parser modules are independent of each other.

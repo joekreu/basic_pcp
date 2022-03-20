@@ -4,7 +4,7 @@
     This parser does not employ insertion of fake tokens before prefix
     and after postfix operators. Instead, special code in the function
     'parse_expr' takes care of prefix and postfix operators.
-    Version 2020-10-21. Python 3.5 or higher. Only rudimentary error handling.
+    Version 2020-10-21. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
 import helpers as h  # Use LBP, RBP, tokenizer_b, run_parser, c_sex.

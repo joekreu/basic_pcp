@@ -9,7 +9,7 @@
     Version 2021-02-22. Use with Python 3.5 or higher.
 '''
 
-# Demo binding powers and codes. Tokens in the codes must be space-separated.
+# Demo binding powers and codes. Tokens must be space-separated here!
 
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
 RBP = {"+": 15, "*": 18, "&": 9, "^": 20}   # integers in range 6 to 99.
@@ -26,7 +26,7 @@ def tokenizer(code):
     LBP["$END"] = -1
 
     toklist = ["$BEGIN"]             # Start to create the 'toklist'.
-    for tok in code.split():
+    for tok in code.split():         # Split 'code' at spaces.
         if LBP.get(tok) == 100:
             toklist.append("$PRE")   # Insert prefix dummies.
         toklist.append(tok)          # Insert token from 'code'.

@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative and recursive.
 
-    Version 2021-11-23. Python 3.5 or higher. Only rudimentary error handling.
+    Version 2021-11-23. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
 import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser from 'helpers'.
