@@ -165,11 +165,13 @@ quotes or (on Windows?) double quotes. Tokens are separated by whitespace,
 or by transition from an alphanumeric to a special character or vice versa.
 In this regard, _underscore_, _parentheses_ and _semicolon_ are considered
 alphanumeric. A minus sign followed by a digit is also considered
-alphanumeric.
+alphanumeric. Operands should be integers or identifiers.
 
 This above command will parse the code by the specified parser and generate
 detailed output -- among others, a two-dimensional representation of the parse
-tree and indications of _correctness_ of the parsing.
+tree and indications of _correctness_ of the parsing. The output can be more
+concise or more verbose. Use the option `-h` (with any basic parser) to find
+out all ways to run the parsers, e.g., `python3 pcp_ir_0.py -h`
 
 The call syntax
 `./PARSER_MODULE 'CODE'` may work, depending on the operating system and the
@@ -178,9 +180,6 @@ shell. An example:
 ```shell
 ./pcp_it_0_1w.py '3 + 5! * 6^2'
 ```
-
-The output can be made more verbose or more concise. Use the option `-h` (with
-any basic parser module) to find out all ways to run the parsers.
 
 The `bash` shell script `run_tests.sh` reads test codes from the file
 `basic_tests.txt` and processes them with the nine basic parsers. It should

@@ -35,17 +35,26 @@ Inserting 'fake operands' allows parsing unary operators as infix operators.
 > Using straightforward extensions, parenthesized subexpression, function
 > invocations and _mixfix_ operators, such as `if ... then ... else ...`, can
 > be parsed. Instead of simply fetching the next atomic operand from the token
-> sequence, a whole _primary expression_ can be parsed recursively. \
+> sequence, a whole _primary expression_ can be parsed recursively.
+> 
 > _Fake operators_ can be inserted to support parsing, in addition to fake
-> operands. \
+> operands.
+> 
+> On the other hand, restrictions for valid expressions could be implemented,
+> for example, by disallowing some combinations of operators.
+> 
 > This should be investigated separately.
+
+> _Note:_ _Token insertion_ is also used in another sense in connection with
+>  parsing, namely for _error recovery_. This is not considered here.
 
 Generally, precedence climbing parsing of expressions can be controlled in one
 of the following two ways (other ways might exist):
 
 1. An operator has a _precedence_ (in the specific sense, i.e., a number) and
 an _associativity_ (one of the two values: _left_ or _right_). In some
-settings, _non_ can be a third possible value of _associativity_.
+settings, _none_ can be a third possible value of _associativity_ (associative
+use of operator is not allowed).
 1. _Binding powers_: An infix operator has a _left_ and a _right_
 _binding power_, denoted by _lbp_ and _rbp_. Initially, prefix operators have
 only an _rbp_ and postfix operator have only an _lbp_. Binding powers are
@@ -67,7 +76,8 @@ and `n + 1` operands:
 ```
 
 where `A0`, `A1`, ... are _atomic operands_ and `Op1`, `Op2`, ... are
-_infix operators_. The case `n = 0` (one atomic operand, no operator) is
+_infix operators_ with _lbp_ and _rbp_. Under these conditions, exactly one
+parse result is found. The case `n = 0` (one atomic operand, no operator) is
 included.
 
 The _parsing rules_ consist of the set of valid operators and their binding
@@ -112,6 +122,14 @@ By inserting fake operands, the expression `(1)` becomes
 (2)   $PRE & a > 7 * b ! $POST + 2
 ```
 
+> _Note:_ The fake tokens do not really need to be inserted. It is enough that
+> the parser pretends that they are inserted. In fact, one of the ten parsers
+> in this repo (`pcp_ir_0_no_ins`; see section 3.1) works like this. However,
+> a real insertion, done by the tokenizer, greatly simplifies the parser's
+> precedence climbing code, because it thereby only has to process infix
+> expressions.
+
+
 Binding powers smaller than 6 are also considered 'reserved'. For example,
 a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
 The benefits of other small 'internal' binding powers become visible in more
@@ -120,6 +138,8 @@ _left associative infix operator_ with small binding powers (e.g., with
 _lbp_ = _rbp_ = 5).
 
 In summary, user defined binding powers should be integers in range `6 to 99`.
+This does not seem to be a serious restriction. If required, the range could
+easily be extended.
 
 The _lbp_ and _rbp_ values of a specific operator can be equal or differ
 by any number, as long as they are in this range. Binding powers of unary
@@ -214,6 +234,7 @@ called _basic parsers_ here, share the same high-level interface:
 2. `pcp_ir_0_no_ins` is also based on iteration and recursion. Contrary to
 `pcp_ir_0`, and contrary to the general setting, it is not based on token
 insertion. Instead, special code takes care of prefix and postfix operators.
+In a way, the implementation pretends that the extra tokens are present.
 
 3. `pcp_it_0_1w` implements an iterative (kind of _shunting yard_) algorithm
 with one explicit stack for operands and operators, and one `while` loop.
@@ -298,7 +319,7 @@ where `PARSER_MODULE` is one of the basic parser modules and `CODE` is the
 code to be parsed. Example:
 
 ```shell
-python3 pcp_rec_0_0.py '3 + 5 ! * 6 ^ 2'
+python3 pcp_rec_0_0.py 'xx + 5 ! * n ^ 2'
 ```
 
 Use the correct interpreter name (e.g., `python` instead of `python3` if
@@ -306,11 +327,20 @@ this is required). Enclose the code in single quotes (Linux) or double quotes
 (Windows?). Tokens are separated by whitespace, or by transition from an
 alphanumeric to a special character or vice versa. In this regard, the four
 characters `_`, `(`, `)`, `;` are considered alphanumeric. A minus sign
-that is followed by a digit is also considered alphanumeric.
+that is followed by a digit is also considered alphanumeric. Operands should
+be identifiers or integers.
 
-This input will generate detailed output -- among others, a two-dimensional
-representation of the parse tree and indications of the _correctness_ of
-the parsing. This is to facilitate experimentation.
+Use the option `-h` (with any basic parser) to find out all ways to run the
+parsers. There are several options that control the output - the output can be
+more verbose or more concise.
+
+```shell
+python3 pcp_ir_0.py -h
+```
+
+The output can, among others, contain a two-dimensional representation of the
+parse tree and indications of the _correctness_ of the parsing. This is to
+facilitate experimentation.
 
 > _Note:_ The terms _correctness_ of parsing, _root operator weight_ and
 >_range_, that may occur in the output, are not defined here. _Correctness_
@@ -328,28 +358,12 @@ An example for this call:
 ./pcp_it_0_1w.py '3 + 5! * 6^2'
 ```
 
-Use the option `-h` (with any basic parser) to find out all ways to run the
-parsers. There are several options that control the output - the output can be
-more verbose or more concise.
-
-```shell
-python3 pcp_ir_0.py -h
-```
-
-The `bash` shell script `run_tests.sh` reads and parses test codes from the
-file `basic_tests.txt` by the nine basic parsers. It should work
-on systems that support `bash` scripts. Run the script without arguments:
-
-```shell
-./run_tests.sh
-```
-
 #### 3.2.1 Randomly generated expressions (option `-r`)
 
 The command
 
 ```shell
-python3 PARSER_MODULE -r [nop [nbp [lexpr]]]
+python3 PARSER_MODULE -r [ nop [ nbp [ lexpr ] ] ]
 ```
 
 will parse a generated expression containing _lexpr_ infix operators which are
@@ -358,7 +372,7 @@ values of the operators are taken randomly and independently, from the range
 `6 ... 6+nbp-1`. Values that are not specified on the command line
 default to 6. The generated operators are of the form `(lbp;rbp)`, where
 `lbp` and `rbp` are the binding powers. E.g., `(6;8)` is an operator with
-`lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . E.g.,
+`lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . For example,
 
 ```shell
 python3 pcp_it_0_2w.py -r 4 3
@@ -406,6 +420,16 @@ where `(7;8)` has `lbp=7` and `rbp=8`, and `(9;10)` has `lbp=9` and `rbp=10`.
 Prefix and postfix operators are allowed. Use the help option (`-h`) for
 details.
 
+#### 3.2.3 The bash test script `run_tests.sh`
+
+The `bash` shell script `run_tests.sh` reads and parses test codes from the
+file `basic_tests.txt` by the nine basic parsers. It should work on systems
+that support `bash` scripts. Run the script without parameters:
+
+```shell
+./run_tests.sh
+```
+
 ## 4. Structure of the source files. Dependencies
 
 The software is in the following files: Ten parser modules (see 3.1), the
@@ -448,7 +472,7 @@ an _lbp_ of 180 and an _rbp_ of 20.
 Here is an incomplete list of references.
 
 [1] Keith Clarke, _The top-down parsing of expressions_  (1986),\
-<https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>.
+<https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
 
 [2] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
 <https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
@@ -480,7 +504,11 @@ _Precedences in specifications and implementations of programming languages_
 [10] Annika Aasa, _User defined syntax_ (1992),\
 <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.3542>
 
-[11] Jean-Marc Bourguet, _Operator precedence parsers_\
-<https://github.com/bourguet/operator_precedence_parsing>.
+[11] Jean-Marc Bourguet, _Operator precedence parsers_,\
+<https://github.com/bourguet/operator_precedence_parsing>
+
+
+[12] Robert Jacobson, _Making a Pratt Parser Generator_,\
+<https://www.robertjacobson.dev/designing-a-pratt-parser-generator>
 
 ---

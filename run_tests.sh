@@ -36,7 +36,7 @@ if [[ -n "$1" ]]; then
     echo "---------------------------------------------------"
     echo
     echo "Parser files matching \"$parsers\" (basic parsers) will be tested."
-    echo
+    echo 
     echo "The file \"binding_powers.json\" contains syntax (binding power)"
     echo "definitions; the file \"$testcodes\" contains test codes."
     echo
@@ -65,6 +65,11 @@ for parser in $parsers; do
         echo "$nparsers: $parser"
     fi
 done
+
+echo
+if [[ -t 1 ]]; then
+    read -r -p "Press return to continue ..."
+fi
 
 if [[ ! -f "$testcodes" ]]; then
         echo
@@ -107,7 +112,7 @@ while IFS= read -r -u 10 code; do
         continue
     fi
 
-    if [[ $((ncodes % askforret)) -eq 0  ]] ; then
+    if [[ $((ncodes % askforret)) -eq 0 && -t 1 ]] ; then
         echo
         read -r -p "Press return to continue ..."
     fi
@@ -141,7 +146,11 @@ while IFS= read -r -u 10 code; do
 done 10< "$testcodes"
 
 echo
-read -r -p "Press return to continue ..."
+
+if [[ -t 1 ]]; then
+    read -r -p "Press return to continue ..."
+fi
+
 
 echo
 echo "Summary"
