@@ -4,7 +4,7 @@
 # on all test expressions in the file './basic_tests.txt'.
 # The syntax (binding powers) will be loaded from './binding_powers.json'.
 
-Version="0.7, 2022-03-05"
+Version="0.7, 2022-03-28"
 
 # Usage:
 # Start 'run_tests.sh' in the folder containing the required files (the parser
@@ -25,12 +25,16 @@ ncodes=0     # Number of code examples in the input ("$testcodes").
 nparsers=0   # Number of parsers (i.e., files matching "$parsers")
 ntests=0     # Number of individual tests (should be ncodes * nparsers)
 ncorrect=0   # Number of precedence correct tests (should be equal to ntests)
+verbose=1    # Verbose mode?
 
 SCRIPTDIR=$(dirname "${BASH_SOURCE[0]}")
 
 cd "$SCRIPTDIR" || exit
 
-if [[ -n "$1" ]]; then
+
+if [[ "$1" = "-q" ]]; then
+    verbose=0
+elif [[ -n "$1" ]]; then
     echo
     echo "Bash script 'run_tests.sh', version $Version"
     echo "---------------------------------------------------"
@@ -50,49 +54,53 @@ if [[ -n "$1" ]]; then
     exit
 fi
 
-echo
-echo "These parsers (files matching \"$parsers\") will be tested:"
+if [[ "$verbose" = 1 ]]; then
+    echo
+    echo "These parsers (files matching \"$parsers\") will be tested:"
+fi
 
 for parser in $parsers; do
     if [[ ! -f "$parser" ]]; then
         echo
         echo " *** Error - no matching parser found. ***"
         echo
-
         exit 1
     else
         nparsers=$((nparsers + 1))
-        echo "$nparsers: $parser"
+        if [[ "$verbose" = 1 ]]; then
+            echo "$nparsers: $parser"
+        fi
     fi
 done
 
 echo
-if [[ -t 1 ]]; then
+if [[ -t 1 && "$verbose" = 1 ]]; then
     read -r -p "Press return to continue ..."
 fi
 
 if [[ ! -f "$testcodes" ]]; then
-        echo
-        echo " *** Error - input file \"$testcodes\" not found. ***"
-        echo
-
-        exit 2
+    echo
+    echo " *** Error - input file \"$testcodes\" not found. ***"
+    echo
+    exit 2
 fi
 
-echo
-echo "The codes to be tested will be loaded from \"$testcodes\"."
-echo "Test codes can be"
-echo "- directly specified expressions, such as a^b + c"
-echo "- randomly generated, such as 'r 4 5 6'"
-echo "- generated from specified binding powers, such as 'd 8 6, 7 9, 6 6'"
-echo "The syntax (operators and binding powers) for directly specified"
-echo "expressions is loaded from \"./binding_powers.json\"."
+if [[ "$verbose" = 1 ]]; then
+    echo
+    echo "The codes to be tested will be loaded from \"$testcodes\"."
+    echo "Test codes can be"
+    echo "- directly specified expressions, such as a^b + c"
+    echo "- randomly generated, such as 'r 4 5 6'"
+    echo "- generated from specified binding powers such as 'd 8 6, 7 9, 6 6'"
+    echo "The syntax (operators and binding powers) for directly specified"
+    echo "expressions is loaded from \"./binding_powers.json\"."
 
-echo
-echo "A '+' indicates success, a '-' indicates failure of one test for"
-echo "one parser. 'Success' means: The result is 'precedence correct'."
-echo "Results are formatted as Lisp-like S-expressions. Results contain"
-echo "fake operands (\$PRE, \$POST) for unary operators."
+    echo
+    echo "A '+' indicates success, a '-' indicates failure of one test for"
+    echo "one parser. 'Success' means: The result is 'precedence correct'."
+    echo "Results are formatted as Lisp-like S-expressions. Results contain"
+    echo "fake operands (\$PRE, \$POST) for unary operators."
+fi
 
 while IFS= read -r -u 10 code; do
 
@@ -112,19 +120,22 @@ while IFS= read -r -u 10 code; do
         continue
     fi
 
-    if [[ $((ncodes % askforret)) -eq 0 && -t 1 ]] ; then
+    if [[ $((ncodes % askforret)) -eq 0 && -t 1 && "$verbose" = 1 ]] ; then
         echo
         read -r -p "Press return to continue ..."
     fi
 
     ncodes=$((ncodes + 1))
-    echo
-    echo -n "Test code $ncodes:" "$opt"
-    if [[ "$opt" = "" ]] ; then
-        echo -n "'$code' "
-    else
-        echo -n " $code "
+    if [[ "$verbose" = 1 ]]; then
+        echo
+        echo -n "Test code $ncodes:" "$opt"
+        if [[ "$opt" = "" ]] ; then
+            echo -n "'$code' "
+        else
+            echo -n " $code "
+        fi
     fi
+
     for parser in $parsers; do
         ntests=$((ntests + 1))
         res=$($parser "-qq" "$opt" "$code")
@@ -133,7 +144,7 @@ while IFS= read -r -u 10 code; do
         fi
         echo -n "$res"
     done
-    if [[ "$res" = "+" ]] ; then
+    if [[ "$res" = "+" && "$verbose" = 1 ]] ; then
         echo
         sexpr=$($parser "-q" "$opt" "$code")
         if [[ "$opt" = "" ]] ; then
@@ -147,10 +158,9 @@ done 10< "$testcodes"
 
 echo
 
-if [[ -t 1 ]]; then
+if [[ -t 1 && "$verbose" = 1 ]]; then
     read -r -p "Press return to continue ..."
 fi
-
 
 echo
 echo "Summary"

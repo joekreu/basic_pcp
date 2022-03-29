@@ -15,8 +15,9 @@
     Version 2022-03-02.
 '''
 
-# The following items from system imports are used: sys.argv, math.inf,
-# os.argv, collections.namedtuple, functools.reduce, random.randint, json.load
+# The following items from system imports are used: sys.argv, sys.executabe,
+# math.inf, os.path, collections.namedtuple, functools.reduce, random.randint,
+# json.load
 
 import sys
 import math
@@ -30,7 +31,7 @@ import bintree    #  The class bintree.FormatBinaryTree is used in helpers.py.
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.8, 2022-03-02"
+_HELPERS_VERSION = "0.5.8, 2022-03-28"
 
 # Valid command line options. The operator '|' between sets means 'set union'.
 # The three options -h -? --help are equivalent.
@@ -54,7 +55,7 @@ _GEN_OP_R = ")"               # Right part.
 
 _GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
 
-# Maximal number of tokens accepted for creation of all possible parse trees.
+# Maximal number of tokens accepted for output of all possible parse trees.
 # A value of 11 means 5 operators (including unary operators) and 6 operands.
 _MAX_FOR_PRINTED_TREES = 11
 
@@ -436,7 +437,7 @@ def _check_all_parsings(toklis):
 def _fakes_to_tree(tree, non_infix_ops):
     ''' Helper function for run_parser. Add fake tokens to prefix and postfix
         operator in parse tree. It is used for results of parsers that work
-        without fake tokens; not used for parsing.
+        without fake tokens; not used for the parsing itself.
     '''
 
     if _isatomic(tree):

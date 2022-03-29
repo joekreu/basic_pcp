@@ -1,18 +1,26 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative and recursive.
 
-    A short demo with some hard coded examples; without test driver overhead,
-    without dependencies. Parsing algorithm is that of 'pcp_ir_0.py'. - Usage:
+    A demo with hard coded examples; without test driver overhead, without
+    dependencies. The parsing algorithm is that of 'pcp_ir_0.py'. This version
+    is intended to demonstrate the actual algorithm; that is, what is needed
+    to parse expressions with prefix, infix, and postfix operators. - Usage:
 
-    python direct_pcp_ir_0.py
+    python3 direct_pcp_ir_0.py
 
-    Version 2021-02-22. Use with Python 3.5 or higher.
+    or possibly
+
+    ./direct_pcp_ir_0.py
+
+    Version 2021-03-27. Use with Python 3.5 or higher.
 '''
 
-# Demo binding powers and codes. Tokens must be space-separated here!
+# Define binding powers in global dictionaries LBP, RBP
 
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
-RBP = {"+": 15, "*": 18, "&": 9, "^": 20}   # integers in range 6 to 99.
+RBP = {"+": 15, "*": 18, "&": 9, "^": 20}     # integers in range 6 to 99.
+
+# Define four code examples. Tokens must be space-separated here!
 DEMOCODES = ['x + 3.4 * y', 'a + b + c', 'n ^ m ^ k', 'xx + b ! * & c + 1']
 
 
@@ -57,7 +65,7 @@ def parse_expr(toks, min_rbp=0):
         toks    -- the tokenizer function returned by 'tokenizer(code)'.
         min_rbp -- rbp for comparison with lbp of following operators
 
-        Global LBP[op], RBP[op]  -- Binding powers of the operator 'op'.
+        Use global LBP[op], RBP[op]  -- binding powers of the operator 'op'.
 
         Return the parse tree as nested Python list.
     '''
@@ -69,8 +77,7 @@ def parse_expr(toks, min_rbp=0):
 
 
 def s_expr(n_list):
-    ''' Format a nested Python list (or an iterable) as Lisp-like S-expression
-        in a string. '''
+    ''' Format a nested Python list as Lisp-like S-expression in a string. '''
 
     return (str(n_list) if isinstance(n_list, str) else
             "(" + " ".join([s_expr(p) for p in n_list]) + ")")

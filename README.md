@@ -183,7 +183,8 @@ shell. An example:
 
 The `bash` shell script `run_tests.sh` reads test codes from the file
 `basic_tests.txt` and processes them with the nine basic parsers. It should
-work on systems that support `bash` scripts. Run the script without arguments.
+work on systems that support `bash` scripts. Run the script without arguments,
+or provide the option `-q` (_quiet_, i.e., less verbose output).
 
 #### 4.1 Randomly generated expressions (option `-r`)
 

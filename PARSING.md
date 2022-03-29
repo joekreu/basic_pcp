@@ -429,6 +429,12 @@ that support `bash` scripts. Run the script without parameters:
 ```shell
 ./run_tests.sh
 ```
+or with option `-q`: Print a `+` for each successful test and print a summary.
+
+```shell
+./run_tests.sh -q
+```
+
 
 ## 4. Structure of the source files. Dependencies
 
