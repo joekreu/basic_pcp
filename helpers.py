@@ -15,7 +15,7 @@
     Version 2022-03-02.
 '''
 
-# The following items from system imports are used: sys.argv, sys.executabe,
+# The following items from system imports are used: sys.argv, sys.executable,
 # math.inf, os.path, collections.namedtuple, functools.reduce, random.randint,
 # json.load
 
@@ -39,7 +39,7 @@ _OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
 _OPTIONS = frozenset(_OUTPUTOPTIONS | {"r", "d"})
 
 # Name of JSON file containing binding powers. These binding powers will be
-# overwritten if one of the command line option -r, -d is in effect.
+# ignored if one of the command line option -r, -d is in effect.
 _BP_JSON_FILENAME = "binding_powers.json"
 
 # Characters for generated operators; to be used with options -r and -d.
