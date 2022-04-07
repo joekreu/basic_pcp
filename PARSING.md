@@ -75,7 +75,7 @@ and `n + 1` operands:
 (**)         A0 Op1 A1 Op2 A2 ... Opn An
 ```
 
-where `A0`, `A1`, ... are _atomic operands_ and `Op1`, `Op2`, ... are
+Here, `A0`, `A1`, ... are _atomic operands_ and `Op1`, `Op2`, ... are
 _infix operators_ with _lbp_ and _rbp_. Under these conditions, exactly one
 parse result is found. The case `n = 0` (one atomic operand, no operator) is
 included.
@@ -328,7 +328,7 @@ this is required). Enclose the code in single quotes (Linux) or double quotes
 alphanumeric to a special character or vice versa. In this regard, the four
 characters `_`, `(`, `)`, `;` are considered alphanumeric. A minus sign
 that is followed by a digit is also considered alphanumeric. Operands should
-be identifiers or integers.
+be identifiers or integers (do not specify floating point numbers).
 
 Use the option `-h` (with any basic parser) to find out all ways to run the
 parsers. There are several options that control the output - the output can be
@@ -424,17 +424,18 @@ details.
 
 The `bash` shell script `run_tests.sh` reads and parses test codes from the
 file `basic_tests.txt` by the nine basic parsers. It should work on systems
-that support `bash` scripts. Run the script without parameters:
+that support `bash` scripts. The script can be run without parameters:
 
 ```shell
 ./run_tests.sh
 ```
-or with option `-q`: Print a `+` for each successful test and print a summary.
+
+This will print detailed results. Run with option `-q` to get less verbose
+output:
 
 ```shell
 ./run_tests.sh -q
 ```
-
 
 ## 4. Structure of the source files. Dependencies
 
@@ -443,20 +444,19 @@ modules `helpers.py` and `bintree.py`, the JSON file
 `binding_powers.json` (syntax), the shell script `run_tests.sh` and the file
 `basic_tests.txt` (test data).
 
-Documentation is in this guide (`PARSING.md`), in `README.md`
-and in `LICENSE.txt`.
+Documentation is in this guide (`PARSING.md`), in `README.md` and in
+`LICENSE.txt`.
 
-The parser modules are independent of each other.
-The basic parsers import functions and other definitions from the
-module `helpers`, e.g., the tokenizers and the test driver function
-`run_parser`. The `helpers` module in turn imports the class
-`FormatBinaryTree` from module `bintree`.
+The parser modules are independent of each other. The basic parsers import
+functions and other definitions from the module `helpers`, e.g., the
+tokenizers and the test driver function `run_parser`. The `helpers` module in
+turn imports the class `FormatBinaryTree` from module `bintree`.
 
 The parser modules invoke the test driver, passing the parse function and the
 corresponding tokenizer as parameters.
 
 The `helpers` module uses the following items from system modules: \
-`sys.argv`, `math.inf`, `os.path`, `collections.namedtuple`,
+`sys.argv`, `sys.executable`, `math.inf`, `os.path`, `collections.namedtuple`,
 `functools.reduce`, `random.randint`, `json.load`.
 
 Comments in the code and data files provide additional information.
@@ -469,7 +469,7 @@ _Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Annika Aasa_ and others.
 
 The _correctness test_ and the definitions of _operator ranges_ (see the
 functions `_is_prec_correct`, `_lrange`, `_rrange` in the module `helpers.py`)
-are adapted from definitions by _Annika Aasa_ ([9], [10]).
+are adapted from definitions by _Annika Aasa_ ([1], [2]).
 
 The computer algebra systems _Maxima_ and (now historic) _muMATH_ use Pratt
 parsers based on binding powers. The assignment operator in these systems has
@@ -477,44 +477,47 @@ an _lbp_ of 180 and an _rbp_ of 20.
 
 Here is an incomplete list of references.
 
-[1] Keith Clarke, _The top-down parsing of expressions_  (1986),\
-<https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
-
-[2] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
-<https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
-
-[3] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ by  (2016),\
-<https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
-
-[4] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
-<https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
-
-[5] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
-<https://matklad.github.io/2020/04/15/from-pratt-to-dijkstra.html>
-
-[6] Eli Bendersky, _Parsing expressions by precedence climbing_ (2012),
-<https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing>
-(with Python code).
-
-[7] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
-
-[8] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
-(2016),\
-<https://www.oilshell.org/blog/2016/11/01.html>
-
-[9] Annika Aasa,
+[1] Annika Aasa,
 _Precedences in specifications and implementations of programming languages_
 (1995),\
 <https://core.ac.uk/download/pdf/82260562.pdf>
 
-[10] Annika Aasa, _User defined syntax_ (1992),\
+[2] Annika Aasa, _User defined syntax_ (1992),\
 <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.3542>
 
-[11] Jean-Marc Bourguet, _Operator precedence parsers_,\
+[3] Eli Bendersky, _Parsing expressions by precedence climbing_ (2012),
+<https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing>
+(with Python code).
+
+[4] Jean-Marc Bourguet, _Operator precedence parsers_,\
 <https://github.com/bourguet/operator_precedence_parsing>
 
+[5] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
+(2016),\
+<https://www.oilshell.org/blog/2016/11/01.html>
 
-[12] Robert Jacobson, _Making a Pratt Parser Generator_,\
+[6] Keith Clarke, _The top-down parsing of expressions_ (1986),\
+<https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
+
+[7] Robert Jacobson, _Making a Pratt Parser Generator_,\
 <https://www.robertjacobson.dev/designing-a-pratt-parser-generator>
+
+[8] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
+<https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
+
+[9] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
+<https://matklad.github.io/2020/04/15/from-pratt-to-dijkstra.html>
+
+[10] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
+
+[11] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
+<https://maxima.sourceforge.io/docs/manual/maxima.pdf>\
+See especially section 7 (_Operators_).
+
+[12] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
+<https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
+
+[13] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
+<https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
 
 ---
