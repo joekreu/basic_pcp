@@ -58,7 +58,7 @@ an operand.
 
 In addition, a special `$BEGIN` token is placed at the beginning, and an
 `$END` token is placed at the end of the token sequence. `$BEGIN` and `$END`
-can act as a kind of _operators_ in the process of parsing. A negative _rbp_
+can act as a kind of _operator_ in the process of parsing. A negative _rbp_
 is assigned to `$BEGIN` and a negative _lbp_ to `$END`.
 
 Insertion of tokens is done during the tokenization, i.e., by the _tokenizer_.
