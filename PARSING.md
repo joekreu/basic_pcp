@@ -466,7 +466,12 @@ Comments in the code and data files provide additional information.
 
 This project was inspired by works on _precedence climbing_ and _Pratt_
 parsing by _Theodore Norvell_, _Aleksey Kladov_ (_matklad_), _Andy Chu_,
-_Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Annika Aasa_ and others.
+_Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Oliver Breuleux_, _Annika Aasa_
+and others.
+
+In the gist `op.py` by _Oliver Breuleux_ (see [5]), _dummy operands_ and
+artificial (high) binding powers are used to virtually convert unary operators
+to infix operators.
 
 The _correctness test_ and the definitions of _operator ranges_ (see the
 functions `_is_prec_correct`, `_lrange`, `_rrange` in the module `helpers.py`)
@@ -486,39 +491,41 @@ _Precedences in specifications and implementations of programming languages_
 [2] Annika Aasa, _User defined syntax_ (1992),\
 <http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.3542>
 
-[3] Eli Bendersky, _Parsing expressions by precedence climbing_ (2012),
+[3] Eli Bendersky, _Parsing expressions by precedence climbing_ (2012),\
 <https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing>
 (with Python code).
 
 [4] Jean-Marc Bourguet, _Operator precedence parsers_,\
 <https://github.com/bourguet/operator_precedence_parsing>
 
-[5] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
+[5] Oliver Breuleux, `op.py`, <https://gist.github.com/breuleux/6147321/>.
+
+[6] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
 (2016),\
 <https://www.oilshell.org/blog/2016/11/01.html>
 
-[6] Keith Clarke, _The top-down parsing of expressions_ (1986),\
+[7] Keith Clarke, _The top-down parsing of expressions_ (1986),\
 <https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
 
-[7] Robert Jacobson, _Making a Pratt Parser Generator_,\
+[8] Robert Jacobson, _Making a Pratt Parser Generator_,\
 <https://www.robertjacobson.dev/designing-a-pratt-parser-generator>
 
-[8] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
+[9] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
 <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
 
-[9] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
+[10] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
 <https://matklad.github.io/2020/04/15/from-pratt-to-dijkstra.html>
 
-[10] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
+[11] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
 
-[11] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
+[12] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
 <https://maxima.sourceforge.io/docs/manual/maxima.pdf>\
 See especially section 7 (_Operators_).
 
-[12] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
+[13] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
 <https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
 
-[13] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
+[14] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
 <https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
 
 ---

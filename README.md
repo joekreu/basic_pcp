@@ -242,9 +242,9 @@ by _Theodore Norvell_, _Aleksey Kladov_
 (_matklad_), _Andy Chu_, _Eli Bendersky_, _Fredrik Lundh_ (_effbot_),
 _Annika Aasa_ and others. See section 5 in the text
 [PARSING](PARSING.md).
-
-The _correctness test_ and the definitions of _operator ranges_ (see the
-functions `_is_prec_correct`, `_lrange`, `_rrange` in `helpers.py`)
-are adapted from definitions by _Annika Aasa_ in
+The _correctness test_ and the definitions of _operator ranges_ implemented
+in `helpers.py` are adapted from definitions by _Annika Aasa_ in
 _Precedences in Specifications and Implementations of Programming Languages_
-(1995).
+(1995). In the gist `op.py` by _Olivier Breuleux_ (see
+<https://gist.github.com/breuleux/6147321/>)  dummy token are used to convert
+unary to infix operators.
