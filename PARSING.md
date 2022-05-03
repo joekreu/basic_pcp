@@ -230,7 +230,10 @@ parsers. The tokenizers provide interfaces for the actual parsing.
 There are ten parsers, in separate modules. Nine of them, which shall be
 called _basic parsers_ here, share the same high-level interface:
 
-1. `pcp_ir_0` is based on iteration (loops) _and_ recursion.
+1. `pcp_ir_0` is based on iteration (loops) _and_ recursion. The module
+implements one of the simplest algorithms for precedence climbing parsing
+of infix expressions where operaters can have independent left and right
+binding powers.
 
 2. `pcp_ir_0_no_ins` is also based on iteration and recursion. Contrary to
 `pcp_ir_0`, and contrary to the general setting, it is not based on token
@@ -466,12 +469,15 @@ Comments in the code and data files provide additional information.
 
 This project was inspired by works on _precedence climbing_ and _Pratt_
 parsing by _Theodore Norvell_, _Aleksey Kladov_ (_matklad_), _Andy Chu_,
-_Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Oliver Breuleux_, _Annika Aasa_
-and others.
+_Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Olivier Breuleux_,
+_Annika Aasa_ and others.
 
-In the gist `op.py` by _Oliver Breuleux_ (see [5]), _dummy operands_ and
-artificial (high) binding powers are used to virtually convert unary operators
-to infix operators.
+The earliest reference to the simple iterative and recursive algorithm in
+`pcp_ir_0` that I know is _Keith Clarke_ [8].
+
+In the gist `op.py` _Olivier Breuleux_ uses _dummy operands_ and
+artificial (high) binding powers to virtually convert unary operators
+to infix operators (see [5]). This idea is explained in his text [6].
 
 The _correctness test_ and the definitions of _operator ranges_ (see the
 functions `_is_prec_correct`, `_lrange`, `_rrange` in the module `helpers.py`)
@@ -498,34 +504,38 @@ _Precedences in specifications and implementations of programming languages_
 [4] Jean-Marc Bourguet, _Operator precedence parsers_,\
 <https://github.com/bourguet/operator_precedence_parsing>
 
-[5] Oliver Breuleux, `op.py`, <https://gist.github.com/breuleux/6147321/>.
+[5] Olivier Breuleux, `op.py`, <https://gist.github.com/breuleux/6147321/>.
 
-[6] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
+[6] Olivier Breuleux, _Insert Language Name Here_.
+_How to make interesting little languages_,
+<http://breuleux.net/blog/language-howto.html>.
+
+[7] Andy Chu, _Pratt Parsing and Precedence Climbing Are the Same Algorithm_
 (2016),\
 <https://www.oilshell.org/blog/2016/11/01.html>
 
-[7] Keith Clarke, _The top-down parsing of expressions_ (1986),\
+[8] Keith Clarke, _The top-down parsing of expressions_ (1986),\
 <https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
 
-[8] Robert Jacobson, _Making a Pratt Parser Generator_,\
+[9] Robert Jacobson, _Making a Pratt Parser Generator_,\
 <https://www.robertjacobson.dev/designing-a-pratt-parser-generator>
 
-[9] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
+[10] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
 <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
 
-[10] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
+[11] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
 <https://matklad.github.io/2020/04/15/from-pratt-to-dijkstra.html>
 
-[11] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
+[12] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
 
-[12] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
+[13] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
 <https://maxima.sourceforge.io/docs/manual/maxima.pdf>\
 See especially section 7 (_Operators_).
 
-[13] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
+[14] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
 <https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
 
-[14] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
+[15] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
 <https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
 
 ---
