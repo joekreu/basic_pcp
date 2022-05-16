@@ -74,7 +74,7 @@ be formatted as Lisp-like _S-expressions_. E.g., parsing `5 + 3 ! * 4` will
 create the list `[+, 5, [*, [!, 3, $POST], 4]]`, or `(+ 5 (* (! 3 $POST) 4))`
 as S-expression. Without the fake operand `$POST` this is `(+ 5 (* (! 3) 4))`.
 
-### 1.2 Main goals of the project
+### 1.2 Main goals of the repository
 
 1. Find and compare demo implementations of precedence climbing algorithms
 based on binding powers. Encourage experimentation.
@@ -86,7 +86,7 @@ parsers.
 ### 1.3 Limitations
 
 Exploring the full potential of precedence climbing parsing based on binding
-powers and token insertion is not the goal of this project.
+powers and token insertion is not the goal of this repository.
 _Pratt parsing_ (although related), _context-free grammars_,
 _Backus normal forms_ and the like are not
 considered. The software does not contain _evaluators_ for the parse trees.
@@ -133,7 +133,7 @@ script).
 
 ## 4. Usage of the parsers
 
-All project files should be placed in the same directory. Note that there is
+All files should be placed in the same directory. Note that there is
 only minimal error handling. Run the parsers from the command line.
 
 The parser `direct_pcp_ir_0.py` is simply run by
@@ -232,12 +232,12 @@ Unary operators can also be included. Use the help option (`-h`) for details.
 
 ## 5. License
 
-The project is licensed under the terms of the MIT License.
+The repository is licensed under the terms of the MIT License.
 See [LICENSE](LICENSE.txt).
 
 ## 6. Acknowledgements
 
-This project was inspired by works on precedence climbing and Pratt parsing
+This repository was inspired by works on precedence climbing and Pratt parsing
 by _Theodore Norvell_, _Aleksey Kladov_
 (_matklad_), _Andy Chu_, _Eli Bendersky_, _Fredrik Lundh_ (_effbot_),
 _Annika Aasa_ and others. See section 5 in the text
@@ -246,5 +246,5 @@ The _correctness test_ and the definitions of _operator ranges_ implemented
 in `helpers.py` are adapted from definitions by _Annika Aasa_ in
 _Precedences in Specifications and Implementations of Programming Languages_
 (1995). In the gist `op.py` by _Olivier Breuleux_ (see
-<https://gist.github.com/breuleux/6147321/>)  dummy token are used to convert
+<https://gist.github.com/breuleux/6147321/>) dummy token are used to convert
 unary to infix operators.
