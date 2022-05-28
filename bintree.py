@@ -73,7 +73,7 @@ class _ListOfLines:
 
 
 class FormatBinaryTree(_ListOfLines):
-    ''' Format a binary tree. To be use for 'pretty printing' of parse trees.
+    ''' Format a binary tree. To be used for 'pretty printing' of parse trees.
     '''
 
     def __init__(self, btree, linenum=0):

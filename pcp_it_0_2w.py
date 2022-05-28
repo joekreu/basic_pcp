@@ -3,7 +3,7 @@
     Version with two stacks and two nested 'while' loops in parse_expr.
 '''
 
-import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser from helpers.
+import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser.
 
 
 def parse_expr(toks):

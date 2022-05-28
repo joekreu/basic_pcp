@@ -8,8 +8,7 @@
     functional programming (lambda expression, reduce, ...).
 '''
 
-# Use LBP, RBP, tokenizer_d, first, second, third, rrest, run_parser,
-# extr_names from helpers:
+# Use tokenizer_d, first, second, third, rrest, c_sex, extr_names, run_parser
 import helpers as h
 
 

@@ -1,14 +1,14 @@
 #! /usr/bin/env python3
-''' Simple precedence climbing parser. Parsing is iterative and recursive.
+''' Simple precedence climbing parser. Parsing is iterative and recursive
 
     Version 2021-11-23. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
-import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser from 'helpers'.
+import helpers as h  # Require LBP, RBP, c_sex, tokenizer_a, run_parser
 
 
 def parse_expr(toks, min_rbp=0):
-    ''' Precedence climbing parser; iterative and recursive parsing. '''
+    ''' Very simple precedence climbing for infix operator expressions. '''
 
     sub, _ = toks(1), toks(1)       # Advance and assign to sub, advance again
     while min_rbp < h.LBP[toks()]:

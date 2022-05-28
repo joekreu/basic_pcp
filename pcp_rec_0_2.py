@@ -10,6 +10,7 @@
     functional programming (lambda expression, reduce, ...).
     '''
 
+# Use tokenizer_d, first, second, rrest, c_sex, extr_names, run_parser.
 import helpers as h
 
 

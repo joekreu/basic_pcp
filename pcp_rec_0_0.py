@@ -2,7 +2,7 @@
 
 ''' Simple precedence climbing parser. Parsing is recursive. '''
 
-import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser from helpers.
+import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser.
 
 
 def parse_expr_rec(toks, sub, min_rbp=0):

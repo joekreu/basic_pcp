@@ -4,13 +4,15 @@
 # on all test expressions in the file './basic_tests.txt'.
 # The syntax (binding powers) will be loaded from './binding_powers.json'.
 
-Version="0.7, 2022-03-28"
+Version="0.8, 2022-05-16"
 
 # Usage:
 # Start 'run_tests.sh' in the folder containing the required files (the parser
-# modules, helpers.py, bintree.py, binding_powers.json, basic_tests.txt):
+# modules, helpers.py, bintree.py, binding_powers.json, basic_tests.txt).
+# Use without options (verbose output), or with option -q (very short output):
 
 # ./run_tests.sh
+# ./run_tests.sh -q
 
 # The following three variables can be adapted to suit your needs.
 
@@ -49,6 +51,10 @@ elif [[ -n "$1" ]]; then
     echo "basic_tests.txt):"
     echo
     echo "./run_tests.sh"
+    echo
+    echo "Use the -q option to get a very short output:"
+    echo
+    echo  "./run_tests.sh -q"
     echo
 
     exit

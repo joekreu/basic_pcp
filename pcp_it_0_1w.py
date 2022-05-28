@@ -3,7 +3,7 @@
     yard parser). There is one stack and one 'while' loop in 'parse_expr'.
 '''
 
-import helpers as h  # Use LBP, RBP, tokenizer_a, run_parser
+import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser
 
 
 def parse_expr(toks):

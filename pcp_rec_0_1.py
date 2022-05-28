@@ -8,8 +8,8 @@
     not promote functional programming (lambda expression, reduce, ...).
 '''
 
-# Use LBP, RBP, tokenizer_c, first, second, third, rrest, run_parser
-# from helpers:
+# Use LBP, RBP, tokenizer_c, first, second, third, rrest, c_sex,
+# run_parser from helpers:
 import helpers as h
 
 
