@@ -1,6 +1,6 @@
 ---
 title: "Precedence Climbing Parsing based on Binding Powers and Token Insertion"
-date: "March 2022"
+date: "June 2022"
 author: "joekreu"
 ---
 
@@ -94,14 +94,14 @@ binding powers) than the operator `+`, therefore the expression
 `a + b * c` should be parsed as `a + (b * c)`, not as `(a + b) * c`.
 
 > _Note:_ The parentheses are used here only to indicate the precedence. The
-> parsers in the repository can't process parenthesized subexpression.
-> However, they can be extended to be able to.
+> parsers in the repository can't process parenthesized subexpression
+> (although they can easily be extended to do so).
 
 An infix operator is _left associative_ if consecutive occurrences
 of this operator are parsed left to right. The expression `a + b + c` is
-parsed as `(a + b) + c`, because `+` is left associative. The
-exponentiation operator `^` is right associative, therefore `a ^ b ^ c` is
-parsed as `a ^ (b ^ c)`.
+parsed as `(a + b) + c`, because `+` is (usually) left associative. The
+exponentiation operator `^` is usually right associative, therefore
+`a ^ b ^ c` is parsed as `a ^ (b ^ c)`.
 
 An operator will be right associative if its _rbp_ is less than its _lbp_,
 otherwise it will be left associative.
@@ -244,8 +244,8 @@ In a way, the implementation pretends that the extra tokens are present.
 with one explicit stack for operands and operators, and one `while` loop.
 
 4. `pcp_it_0_1wg` uses a tokenizer that is implemented as a _generator_ in
-the sense of Python programming, i.e., it uses the `yield` statement instead
-of `return`. It is similar to `pcp_it_0_1w`.
+the sense of Python programming. A generator uses the `yield` statement
+instead of `return`. Otherwise, `pcp_it_0_1wg` is similar to `pcp_it_0_1w`.
 
 5. `pcp_it_0_2w` implements an iterative algorithm with two explicit stacks,
 one for operands and one for operators, and two nested `while` loops. After
@@ -280,12 +280,12 @@ Analysis of the code and test results support this claim:
 This should also justify the use of the generic term _precedence climbing_.
 
 > _Note:_ The term _precedence_ is used in both a generic sense and a
-> specific sense. In the generic sense, it is about finding a particular parse
-> tree for otherwise ambiguous expressions based on some kind of binding
-> strengths of the operators. In the specific sense, _precedence_ is a number
-> assigned to an operator. The parsers in this repository are
-> _precedence parsers_ in the generic sense, but they are not based on
-> _precedence_ in the specific sense.
+> specific sense. \
+> In the generic sense, it is about making a precedence
+> decision between operators, in otherwise ambiguous situations. \
+> In the specific sense, _precedence_ is a number assigned to an operator. \
+> The parsers in this repository are _precedence parsers_ in the generic
+> sense, but they are not based on _precedence_ in the specific sense.
 
 The remaining parser, `direct_pcp_ir_0`, uses the algorithm of `pcp_ir_0` to
 parse some 'hard coded' examples. It is 'self-contained' (without
@@ -537,5 +537,10 @@ See especially section 7 (_Operators_).
 
 [15] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
 <https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
+
+[16] Bob Nystrom, _Pratt Parsers: Expression Parsing Made Easy_ (2011),\
+<http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/>
+(with Java code at <https://github.com/munificent/bantam>, and C# code by John Cardinal
+at <https://github.com/jfcardinal/BantamCs>).
 
 ---
