@@ -12,7 +12,7 @@
 
     See README.
 
-    Version 2022-03-02.
+    Version 2022-06-15.
 '''
 
 # The following items from system imports are used: sys.argv, sys.executable,
@@ -27,11 +27,11 @@ import functools
 import random
 import json
 
-import bintree    #  The class bintree.FormatBinaryTree is used in helpers.py.
+import bintree    # The class bintree.FormatBinaryTree is used in helpers.py.
 
 # === Global constants ===
 
-_HELPERS_VERSION = "0.5.8, 2022-03-28"
+_HELPERS_VERSION = "0.6.0, 2022-06-15"
 
 # Valid command line options. The operator '|' between sets means 'set union'.
 # The three options -h -? --help are equivalent.
@@ -378,8 +378,11 @@ def _root_pos(tree):
     return None if _isatomic(tree) else _tokens_in_tree(tree[1])
 
 
+# In _lrange, _rrange: clbp, crbp are "covering" left and right bp.
+# The parameters clbp, crbp enable the recursive definitions
+
 def _lrange(toklis, pos, clbp):
-    ''' range to the left of operator at position 'pos' (one-based). '''
+    ''' range to the left of operator at position 'pos' (one-based).'''
 
     return (pos - 1 if pos <= 2 or RBP[toklis[pos-3]] < clbp
             else _lrange(toklis, pos-2, min(clbp, LBP[toklis[pos-3]])))
@@ -392,13 +395,35 @@ def _rrange(toklis, pos, crbp):
             else _rrange(toklis, pos+2, min(crbp, RBP[toklis[pos+1]])))
 
 
+def _range(toklis, pos):
+    ''' Return left and right range as pair. '''
+
+    return (_lrange(toklis, pos, LBP[toklis[pos-1]]),
+            _rrange(toklis, pos, RBP[toklis[pos-1]]))
+
+
+def _is_range_correct(toklis, tree, rfrom, rto):
+    ''' Given a list of tokens and tree for this list, is the tree
+        'range correct'? rfrom and rto are the start and the end
+        position (one based) in toklist for tree. The function is
+        recursive. At start, rfrom = 1 and rto = len(toklis).
+    '''
+
+    if _isatomic(tree):
+        return True
+    rootpos = _tokens_in_tree(tree[1]) + rfrom
+    rangeleft, rangeright = _range(toklis, rootpos)
+    return (rfrom == rangeleft and rto == rangeright and
+            _is_range_correct(toklis, tree[1], rfrom, rootpos-1) and
+            _is_range_correct(toklis, tree[2], rootpos+1, rto))
+
+
 def _print_ranges(toklis):
     ''' Print ranges of all operators in toklis.'''
 
-    print("\n   Operator ranges" if len(toklis) > 1 else "")
+    print("\nOperator ranges" if len(toklis) > 1 else "")
     for pos in range(1, len(toklis), 2):
-        lpos = _lrange(toklis, pos+1, LBP[toklis[pos]])
-        rpos = _rrange(toklis, pos+1, RBP[toklis[pos]])
+        lpos, rpos = _range(toklis, pos+1)
         print("{:2} .. {:2} ({:3}) .. {:2}".format(lpos, pos+1, toklis[pos],
                                                    rpos))
 
@@ -417,19 +442,25 @@ def _check_all_parsings(toklis):
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
             print("Correct trees are printed (there should be exactly one):")
         else:
-            print("Exactly one should be precedence correct:")
+            print("Exactly one tree should be precedence correct (PREC COR)" +
+                  " and the same\n" +
+                  "tree should be the only range correct (RANG COR) tree.")
     for tree in all_parse_trees:
-        is_correct = _is_prec_correct(tree)
-        if not is_correct and len(toklis) > _MAX_FOR_PRINTED_TREES:
+        preced_correct = _is_prec_correct(tree)
+        range_correct = _is_range_correct(toklis, tree, 1, len(toklis))
+        if (not (preced_correct or range_correct) and
+           len(toklis) > _MAX_FOR_PRINTED_TREES):
             continue
-        print(s_expr(tree), " correct" if is_correct else " -------", end="")
+        print(s_expr(tree), " PREC COR" if preced_correct else " --------",
+              end="")
         if _root_pos(tree):
             print("  Root pos " + str(_root_pos(tree) + 1), end=" ")
             cover_lbp = LBP[toklis[_root_pos(tree)]]
             cover_rbp = RBP[toklis[_root_pos(tree)]]
             print("range " + str(_lrange(toklis, _root_pos(tree) + 1,
                                          cover_lbp)) + " ... " +
-                  str(_rrange(toklis, _root_pos(tree) + 1, cover_rbp)))
+                  str(_rrange(toklis, _root_pos(tree) + 1, cover_rbp)),
+                  "RANG_COR" if range_correct else "--------")
         else:              # _root_pos is None if tree is a single atom
             print()
 
@@ -489,7 +520,7 @@ def _print_help():
           "      taken from nop random operators with nbp random" +
           " binding powers.")
     print("      nbp must be <= 94. Defaults: nop = " + str(_RAND_N_OP) +
-          ", nbp = " +  str(_RAND_N_BP) + ", lexpr = " + str(_RAND_L_EXPR) +
+          ", nbp = " + str(_RAND_N_BP) + ", lexpr = " + str(_RAND_L_EXPR) +
           ".")
     print("-d    Create and parse expression with operators" +
           " with specified lbp,\n" +
@@ -647,7 +678,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     toks = tokenizer_a(code)
     while toks() != "$END":
         toklist.append(toks(1))
-    toklist.pop()
+    toklist.pop()  # Now toklist includes fake tokens, but not $BEGIN, $END
     print("\nToken positions as used for checking the parse trees\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
@@ -656,6 +687,9 @@ def _print_result(res, res1, quiet, code, upsidedown):
     print("Position " + " ".join(str_pos))
     if quiet < 0:
         _print_ranges(toklist)
+        print("\nParse result is range correct. " if
+              _is_range_correct(toklist, res1, 1, len(toklist))
+              else "Parse result is not range correct.")
     _check_all_parsings(toklist)
 
     return 0

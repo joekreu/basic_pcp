@@ -64,8 +64,7 @@ in the corresponding direction.
 In simple situations, greater binding powers mean the same as higher
 precedence. Parsing based on binding powers can be more powerful, though.
 Precedence and associativity can be expressed by equivalent definitions of
-binding powers, but not always vice versa. In a way, the definition of general
-binding power based parsing is in the code of the parsers.
+binding powers, but not always vice versa.
 
 In this repository, parsing of expressions with infix, prefix, and postfix
 operators is reduced to the following simple scheme with `n` operators
@@ -81,7 +80,7 @@ parse result is found. The case `n = 0` (one atomic operand, no operator) is
 included.
 
 The _parsing rules_ consist of the set of valid operators and their binding
-powers. The rules can be dynamically loaded, for example, from a `csv`-file or
+powers. The rules can be dynamically loaded, for example, from a `csv` or
 a JSON file.
 
 Atomic operands (e.g., numbers and identifiers) consist of one _token_ only.
@@ -122,19 +121,52 @@ By inserting fake operands, the expression `(1)` becomes
 (2)   $PRE & a > 7 * b ! $POST + 2
 ```
 
-> _Note:_ The fake tokens do not really need to be inserted. It is enough that
-> the parser pretends that they are inserted. In fact, one of the ten parsers
-> in this repository (`pcp_ir_0_no_ins`; see section 3.1) works like this.
-> However, a real insertion, done by the tokenizer, greatly simplifies the
-> parser's precedence climbing code, because it thereby only has to process
-> infix expressions.
+The procedure of fake operand insertion also works with two or more
+consecutive prefix operators, and with two or more consecutive postfix
+operators. Multiple unary operators of the same kind (prefix or postfix)
+are always processed from "the inside to the outside", independent of the
+binding powers of the operators.
+
+For example, if `&` and `%` are prefix
+operators and `A` is an operand, then `& % A` will be parsed as
+`(& $PRE (% $PRE A))`; after omitting the dummy operands this will become
+`(& (% A))`. This is independent of the `rbp` of `&` and `%`.
+
+However, things get more complicated when there are prefix _and_ postfix
+operators for the same operand. If, in addition to the
+previous example, `!` is a postfix operator, then the parse result of
+`& A !` will depend on the _rbp_ of `&` and the _lbp_ of `!`. Now consider
+
+```text
+& % A ! ~
+```
+
+where `~` is another postfix operator. Depending on the binding powers, the
+parse result can be one of the following:
+
+```text
+(~ (! (& (% A))))
+(& (% (~ (! A))))
+(& (~ (! (% A))))
+(~ (& (% (! A))))
+(~ (& (! (% A))))
+(& (~ (% (! A))))
+
+```
+
+The fake tokens do not really need to be inserted. It is enough that the
+parser pretends that they are inserted. In fact, one of the ten parsers in 
+this repository (`pcp_ir_0_no_ins`; see section 3.1) works like this.
+However, a real insertion, done by the tokenizer, greatly simplifies the
+parser's precedence climbing code, because it thereby only has to process
+infix expressions.
 
 
 Binding powers smaller than 6 are also considered 'reserved'. For example,
 a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
 The benefits of other small 'internal' binding powers become visible in more
-elaborate parsers. E.g., the _comma_ can possibly be parsed as a
-_left associative infix operator_ with small binding powers (e.g., with
+elaborate parsers. E.g., the _comma_ can be parsed under certain conditions
+as a _left associative infix operator_ with small binding powers (e.g., with
 _lbp_ = _rbp_ = 5).
 
 In summary, user defined binding powers should be integers in range `6 to 99`.
@@ -182,13 +214,13 @@ The software does not contain _evaluators_ of the parsed expressions.
 In a first step, a _tokenizer_ (_lexical scanner_) creates a sequence of
 _tokens_ from the input. A token may consist of one or more characters.
 
-Tokens must be separated by whitespace, or by transition from an alphanumeric
-to a special character or vice versa. A minus sign that is followed by a
-digit is considered alphanumeric. Also, the four characters `_`, `(`, `)`, `;`
-(underscore, left and right parenthesis, semicolon) are considered
-alphanumeric. This is because operators of type `(23;12)` or `(10;_)` will be
-generated if a parser is run with option `-r` or `-d` (see subsections 3.2.1,
-3.2.2).
+In this repo, tokens must be separated by whitespace, or by transition from
+an alphanumeric to a special character or vice versa. A minus sign that is
+followed by a digit is considered alphanumeric. Also, the four characters
+`_`, `(`, `)`, `;` (underscore, left and right parenthesis, semicolon) are
+considered alphanumeric. This is because operators of type `(23;12)` or
+`(10;_)` will be generated if a parser is run with option `-r` or `-d`
+(see subsections 3.2.1, 3.2.2).
 
 _Examples:_ `3*4+5` is tokenized the same as `3 * 4 + 5` (5 tokens). The
 input `5!*7` is tokenized as `5 !* 7` (3 tokens), while `5! *7` is tokenized
@@ -198,11 +230,11 @@ Operands should consist of alphanumeric characters, though this is not
 checked.
 
 The tokenizers are also responsible for inserting the fake operands `$PRE` and
-`$POST`. In addition, a special `$BEGIN` token is placed at the beginning, and
-an `$END` token is placed at the end of the token sequence. `$BEGIN` and
-`$END` can act as a kind of _operators_ in the process of parsing. In this
-context, a negative _rbp_ is assigned to `$BEGIN` and a negative _lbp_ to
-`$END`.
+`$POST` (except for `tokenizer_b`, see below). In addition, a special `$BEGIN`
+token is placed at the beginning, and an `$END` token is placed at the end of
+the token sequence. `$BEGIN` and `$END` can act as a kind of _operators_ in
+the process of parsing. In this context, a negative _rbp_ is assigned to
+`$BEGIN` and a negative _lbp_ to `$END`.
 
 The complete token sequence generated by the tokenizer for the example (1) is
 
@@ -223,6 +255,28 @@ There are five tokenizers in this repository: \
 the others are included mainly because of special requirements of some
 parsers. The tokenizers provide interfaces for the actual parsing.
 
+`tokenizer_a` returns a _function_. If `code` is a valid
+code string, and `toks = tokenizer_a(code)`, then
+`toks(0)` (or simply `toks()`) will return the current token, `toks(1)`
+will advance by one token and return the new current token. `tokenizer_b`
+does not insert the fake tokens `$PRE` and `$POST`, otherwise it works
+like `tokenizer_a`.
+
+`tokenizer_e` is a _generator_ (in the sense of Python) that returns an
+_iterator_ on the tokens. A tokenizer implemented as generator can easily
+be used in _iterative_ (_shunting yard_) parsers.
+
+`tokenizer_c` and `tokenizer_d` return a singly linked list of tokens.
+
+For `tokenizer_d`, a _token_ is a named tuple that contains the binding
+powers of operator tokens. This allows the implementation of a more
+_functional_ parser because, in this way, access to the global data
+`LBP` and `RBP` can be avoided.
+
+For the other tokenizers, a token is simply the string that represents the
+token. In this case, a token is recognized as an _operator token_ if it is
+a key in the `LBP`, `RBP` dictionaries.
+
 ## 3. Overview on the parsers. Notes on use
 
 ### 3.1 The individual parsers
@@ -230,10 +284,11 @@ parsers. The tokenizers provide interfaces for the actual parsing.
 There are ten parsers, in separate modules. Nine of them, which shall be
 called _basic parsers_ here, share the same high-level interface:
 
-1. `pcp_ir_0` is based on iteration (loops) _and_ recursion. The module
-implements one of the simplest algorithms for precedence climbing parsing
-of infix expressions where operators can have independent left and right
-binding powers.
+1. `pcp_ir_0` is based on iteration (loops) _and_ recursion. The actual
+parser is contained in the function `parse_expr` in five lines of Python
+code. This might be one of the simplest implementations of precedence
+climbing parsing for infix expressions where the operators can have
+independent left and right binding powers.
 
 2. `pcp_ir_0_no_ins` is also based on iteration and recursion. Contrary to
 `pcp_ir_0`, and contrary to the general setting, it is not based on token
@@ -259,18 +314,22 @@ of _functional programming_). It uses a Lisp-like _singly linked list_ of
 tokens.
 
 8. `pcp_rec_0_2` is a recursive and purely functional parser. The tokenizer
-for this parser and for `pcp_rec_03` uses a singly linked list of tokens.
-Tokens are implemented as triples (tuples of length 3); operator tokens
-contain the binding powers as second and third component.
+for this parser and for `pcp_rec_03` uses a singly linked list of tokens,
+where tokens are implemented as triples (tuples of length 3); operator
+tokens contain the binding powers as second and third component.
 
-1. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
+9. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
 slightly differs from that of `pcp_re_0_2`. 
 
 All these parsers accept the same operator definitions. They use functions
 from the module `helpers.py`, and they are meant to be run by the same test
 driver.
 
-Analysis of the code and test results support this claim:
+There is probably no point in _explaining_ the algorithms. The Python code
+itself seems to be the best explanation.
+
+Analysis of the code and test results support the following claim
+(but do not provide a formal proof):
 
 > _All basic parsers accept the same set of expressions and create identical_
 > _results with identical input, provided they use identical operator and_
@@ -346,12 +405,16 @@ The output can, among others, contain a two-dimensional representation of the
 parse tree and indications of the _correctness_ of the parsing. This is to
 facilitate experimentation.
 
-> _Note:_ The terms _correctness_ of parsing, _root operator weight_ and
->_range_, that may occur in the output, are not defined here. _Correctness_
+> _Note:_ The terms _precedence correctness_ of parsing,
+> _root operator weight_, _range_ and _range correctness_, that may occur
+> in the output, are not defined here. _Precedence correctness_
 > is modelled after (but not identical to) the definition of this term by
 > _Annika Aasa_ in _User Defined Syntax_ (1992) or
 > _Precedences in Specifications and Implementations of Programming Languages_
-> (1995).
+> (1995). \
+> The result of parsing a valid expression should be _precedence correct_ and
+> _range correct_, and no other parse tree derived from this expression should
+> be _precedence correct_ or _range correct_.
 
 The shorter call syntax `./PARSER_MODULE 'CODE'` may work, depending on the
 operating system and the shell. Set the _executable_ flag of the parser
@@ -456,6 +519,12 @@ functions and other definitions from the module `helpers`, e.g., the
 tokenizers and the test driver function `run_parser`. The `helpers` module in
 turn imports the class `FormatBinaryTree` from module `bintree`.
 
+However, most of the Python code in `helpers.py` is not needed for the actual
+parsing. It is used for processing of the input, for presentation of the
+results, for correctness checks. For shorter, self-contained parser code, see
+`direct_pcp_ir_0.py` or the files in the gist `infix_parser.py` at
+<https://gist.github.com/joekreu>.
+
 The parser modules invoke the test driver, passing the parse function and the
 corresponding tokenizer as parameters.
 
@@ -470,7 +539,7 @@ Comments in the code and data files provide additional information.
 This repository was inspired by works on _precedence climbing_ and _Pratt_
 parsing by _Theodore Norvell_, _Aleksey Kladov_ (_matklad_), _Andy Chu_,
 _Eli Bendersky_, _Fredrik Lundh_ (_effbot_), _Olivier Breuleux_,
-_Annika Aasa_ and others.
+_Bob Nystrom_ (_munificent_), _Dmitry A. Kazakov_, _Annika Aasa_ and others.
 
 The earliest reference to the simple iterative and recursive algorithm in
 `pcp_ir_0` that I know is _Keith Clarke_ [8].
@@ -479,15 +548,21 @@ In the gist `op.py` _Olivier Breuleux_ uses _dummy operands_ and
 artificial (high) binding powers to virtually convert unary operators
 to infix operators (see [5]). This idea is explained in his text [6].
 
-The _correctness test_ and the definitions of _operator ranges_ (see the
-functions `_is_prec_correct`, `_lrange`, `_rrange` in the module `helpers.py`)
-are adapted from definitions by _Annika Aasa_ ([1], [2]).
+_Dmitry Kazakov_ emphasizes the benefit of _two_ priority values
+(i.e., what is called _lbp_ and _rbp_ here) instead of one priority and
+associativity. See posts of _Dmitry A. Kazakov_ and _James Harris_ 
+at `compilers.iecc.com` [10].
 
 The computer algebra systems _Maxima_ and (now historic) _muMATH_ use Pratt
 parsers based on binding powers. The assignment operator in these systems has
 an _lbp_ of 180 and an _rbp_ of 20.
 
-Here is an incomplete list of references.
+The test for _precedence correctness_ and the definitions of
+_operator ranges_ (see the functions `_is_prec_correct`, `_lrange`,
+`_rrange` in the module `helpers.py`) are adapted from definitions by
+_Annika Aasa_ [1], [2].
+
+__An incomplete list of references__
 
 [1] Annika Aasa,
 _Precedences in specifications and implementations of programming languages_
@@ -517,30 +592,35 @@ _How to make interesting little languages_,
 [8] Keith Clarke, _The top-down parsing of expressions_ (1986),\
 <https://www.antlr.org/papers/Clarke-expr-parsing-1986.pdf>
 
-[9] Robert Jacobson, _Making a Pratt Parser Generator_,\
+[9] [_Common operator notation_](https://en.wikipedia.org/wiki/Common_operator_notation)
+(_Wikipedia_, June 2022).
+
+[10] James Harris, Dmitry A. Kazakov, _Compiling expressions_ (2013),\
+posts on compilers.iecc.com,
+<https://compilers.iecc.com/comparch/article/13-01-013>
+
+[11] Robert Jacobson, _Making a Pratt Parser Generator_,\
 <https://www.robertjacobson.dev/designing-a-pratt-parser-generator>
 
-[10] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
+[12] Aleksey Kladov (matklad), _Simple but Powerful Pratt Parsing_ (2020),\
 <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
 
-[11] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
+[13] Aleksey Kladov (matklad), _From Pratt to Dijkstra_ (2020),\
 <https://matklad.github.io/2020/04/15/from-pratt-to-dijkstra.html>
 
-[12] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
+[14] Fredrik Lundh (effbot), _Simple Top-Down Parsing in Python_ (2008)
 
-[13] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
+[15] Computer Algebra System Maxima, _Maxima Manual_, _Version 5.45.0_,\
 <https://maxima.sourceforge.io/docs/manual/maxima.pdf>\
 See especially section 7 (_Operators_).
 
-[14] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
+[16] Theodore S. Norvell, _Parsing Expressions by Recursive Descent_ (1999),\
 <https://www.engr.mun.ca/~theo/Misc/exp_parsing.htm>
 
-[15] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
+[17] Theodore S. Norvell, _From Precedence Climbing to Pratt Parsing_ (2016),\
 <https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
 
-[16] Bob Nystrom, _Pratt Parsers: Expression Parsing Made Easy_ (2011),\
+[18] Bob Nystrom, _Pratt Parsers: Expression Parsing Made Easy_ (2011),\
 <http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/>
 (with Java code at <https://github.com/munificent/bantam>, and C# code by John Cardinal
 at <https://github.com/jfcardinal/BantamCs>).
-
----
