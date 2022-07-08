@@ -36,17 +36,17 @@ Inserting 'fake operands' allows parsing unary operators as infix operators.
 > invocations and _mixfix_ operators, such as `if ... then ... else ...`, can
 > be parsed. Instead of simply fetching the next atomic operand from the token
 > sequence, a whole _primary expression_ can be parsed recursively.
-> 
+>
 > _Fake operators_ can be inserted to support parsing, in addition to fake
 > operands.
-> 
+>
 > On the other hand, restrictions for valid expressions could be implemented,
-> for example, by disallowing some combinations of operators.
-> 
+> for example, by disallowing some combinations of adjacent operators.
+>
 > This should be investigated separately.
-
+>
 > _Note:_ _Token insertion_ is also used in another sense in connection with
->  parsing, namely for _error recovery_. This is not considered here.
+> parsing, namely for _error recovery_. This is not considered here.
 
 Generally, precedence climbing parsing of expressions can be controlled in one
 of the following two ways (other ways might exist):
@@ -155,12 +155,11 @@ parse result can be one of the following:
 ```
 
 The fake tokens do not really need to be inserted. It is enough that the
-parser pretends that they are inserted. In fact, one of the ten parsers in 
+parser pretends that they are inserted. In fact, one of the ten parsers in
 this repository (`pcp_ir_0_no_ins`; see section 3.1) works like this.
 However, a real insertion, done by the tokenizer, greatly simplifies the
 parser's precedence climbing code, because it thereby only has to process
 infix expressions.
-
 
 Binding powers smaller than 6 are also considered 'reserved'. For example,
 a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
@@ -215,12 +214,12 @@ In a first step, a _tokenizer_ (_lexical scanner_) creates a sequence of
 _tokens_ from the input. A token may consist of one or more characters.
 
 In this repo, tokens must be separated by whitespace, or by transition from
-an alphanumeric to a special character or vice versa. A minus sign that is
-followed by a digit is considered alphanumeric. Also, the four characters
-`_`, `(`, `)`, `;` (underscore, left and right parenthesis, semicolon) are
-considered alphanumeric. This is because operators of type `(23;12)` or
-`(10;_)` will be generated if a parser is run with option `-r` or `-d`
-(see subsections 3.2.1, 3.2.2).
+an alphanumeric to a special character or vice versa. A minus sign
+immediately followed by a digit is considered alphanumeric. Also, the four
+characters `_`, `(`, `)`, `;` (underscore, left and right parenthesis,
+semicolon) are considered alphanumeric. This is because operators of type
+`(23;12)` or `(10;_)` will be generated if a parser is run with option
+`-r` or `-d` (see subsections 3.2.1, 3.2.2).
 
 _Examples:_ `3*4+5` is tokenized the same as `3 * 4 + 5` (5 tokens). The
 input `5!*7` is tokenized as `5 !* 7` (3 tokens), while `5! *7` is tokenized
@@ -319,7 +318,7 @@ where tokens are implemented as triples (tuples of length 3); operator
 tokens contain the binding powers as second and third component.
 
 9. `pcp_rec_03` is recursive and purely functional. Its parsing algorithm
-slightly differs from that of `pcp_re_0_2`. 
+slightly differs from that of `pcp_re_0_2`.
 
 All these parsers accept the same operator definitions. They use functions
 from the module `helpers.py`, and they are meant to be run by the same test
@@ -353,7 +352,7 @@ dependencies).
 ### 3.2 Usage of the parsers
 
 Python 3.8 or later is required because the 'walrus'-operator `:=` is used.
-Furthermore, the `nonlocal` keyword is used. 
+Furthermore, the `nonlocal` keyword is used.
 
 Place all the necessary files (see section 4) in the same directory.
 
@@ -390,11 +389,11 @@ this is required). Enclose the code in single quotes (Linux) or double quotes
 (Windows?). Tokens are separated by whitespace, or by transition from an
 alphanumeric to a special character or vice versa. In this regard, the four
 characters `_`, `(`, `)`, `;` are considered alphanumeric. A minus sign
-that is followed by a digit is also considered alphanumeric. Operands should
-be identifiers or integers (do not specify floating point numbers).
+immediately followed by a digit is also considered alphanumeric. Operands
+should be identifiers or integers (do not specify floating point numbers).
 
 Use the option `-h` (with any basic parser) to find out all ways to run the
-parsers. There are several options that control the output - the output can be
+parsers. There are several options that control the output -- the output can be
 more verbose or more concise.
 
 ```shell
@@ -550,7 +549,7 @@ to infix operators (see [5]). This idea is explained in his text [6].
 
 _Dmitry Kazakov_ emphasizes the benefit of _two_ priority values
 (i.e., what is called _lbp_ and _rbp_ here) instead of one priority and
-associativity. See posts of _Dmitry A. Kazakov_ and _James Harris_ 
+associativity. See posts of _Dmitry A. Kazakov_ and _James Harris_
 at `compilers.iecc.com` [10].
 
 The computer algebra systems _Maxima_ and (now historic) _muMATH_ use Pratt
@@ -562,7 +561,7 @@ _operator ranges_ (see the functions `_is_prec_correct`, `_lrange`,
 `_rrange` in the module `helpers.py`) are adapted from definitions by
 _Annika Aasa_ [1], [2].
 
-__An incomplete list of references__
+### An incomplete list of references
 
 [1] Annika Aasa,
 _Precedences in specifications and implementations of programming languages_
@@ -621,6 +620,7 @@ See especially section 7 (_Operators_).
 <https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm>
 
 [18] Bob Nystrom, _Pratt Parsers: Expression Parsing Made Easy_ (2011),\
-<http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/>
-(with Java code at <https://github.com/munificent/bantam>, and C# code by John Cardinal
-at <https://github.com/jfcardinal/BantamCs>).
+<http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/>.
+Java code at <https://github.com/munificent/bantam>, C# code by John Cardinal
+at <https://github.com/jfcardinal/BantamCs>, and Python code by Ravener at
+<https://github.com/ravener/bantam.py>

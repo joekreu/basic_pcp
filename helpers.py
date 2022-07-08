@@ -10,24 +10,23 @@
     (i.e., a token without binding powers) at the place of an operator will
     raise an exception.
 
-    See README.
+    See docs in README or PARSING.
 
     Version 2022-06-15.
 '''
 
-# The following items from system imports are used: sys.argv, sys.executable,
-# math.inf, os.path, collections.namedtuple, functools.reduce, random.randint,
-# json.load
 
-import sys
-import math
-import os
-import collections
-import functools
-import random
-import json
+# Imports from standard library. The specified items are used here.
+import sys          # sys.argv, sys.executable
+import math         # math.inf
+import os           # os.path
+import collections  # collections.namedtuple
+import functools    # functools.reduce
+import random       # random.randint
+import json         # json.load
 
-import bintree    # The class bintree.FormatBinaryTree is used in helpers.py.
+# Import from local module.
+import bintree      # bintree.FormatBinaryTree
 
 # === Global constants ===
 
@@ -365,17 +364,17 @@ def _makebintrees(toklis):
     return res
 
 
-def _tokens_in_tree(tree):
+def _num_toks_in_tree(tree):
     ''' Return number of tokens in tree. '''
 
     return (1 if _isatomic(tree) else
-            1 + _tokens_in_tree(tree[1]) + _tokens_in_tree(tree[2]))
+            1 + _num_toks_in_tree(tree[1]) + _num_toks_in_tree(tree[2]))
 
 
 def _root_pos(tree):
     ''' Find position of root operator of tree in the expression. '''
 
-    return None if _isatomic(tree) else _tokens_in_tree(tree[1])
+    return None if _isatomic(tree) else _num_toks_in_tree(tree[1])
 
 
 # In _lrange, _rrange: clbp, crbp are "covering" left and right bp.
@@ -411,7 +410,7 @@ def _is_range_correct(toklis, tree, rfrom, rto):
 
     if _isatomic(tree):
         return True
-    rootpos = _tokens_in_tree(tree[1]) + rfrom
+    rootpos = _num_toks_in_tree(tree[1]) + rfrom
     rangeleft, rangeright = _range(toklis, rootpos)
     return (rfrom == rangeleft and rto == rangeright and
             _is_range_correct(toklis, tree[1], rfrom, rootpos-1) and
@@ -436,11 +435,12 @@ def _check_all_parsings(toklis):
     if not (all_parse_trees := _makebintrees(toklis)):
         return
     if (nppt := len(all_parse_trees)) == 1:
-        print("\nOne possible parse tree. It should be precedence correct.")
+        print("\nOne possible parse tree. It is precedence correct.")
     else:
         print("\nAll " + str(nppt) + " possible parse trees are checked.")
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
-            print("Correct trees are printed (there should be exactly one):")
+            print("Precedence correct (PREC COR) and range correct " +
+            "(RANG COR)\ntrees are printed (there should be exactly one):")
         else:
             print("Exactly one tree should be precedence correct (PREC COR)" +
                   " and the same\n" +
