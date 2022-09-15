@@ -5,10 +5,10 @@
     Contrary to most other parsers in this repo, a 'token' is here a named
     tuple, consisting of the actual token (string or number) and, in case the
     token is an operator, the binding powers. See definition ot 'Token' in
-    'helpers.py'. This makes a purely functional implementation possible. The
-    implementation is not 'pythonic', though, because Python does not promote
-    functional programming (lambda expression, reduce, ...).
-    '''
+    'helpers.py'. This makes a purely functional implementation possible.
+    However, the implementation is not 'pythonic', because Python does not
+    promote functional programming (lambda expression, reduce, ...).
+'''
 
 # Use tokenizer_d, first, second, rrest, c_sex, extr_names, run_parser.
 import helpers as h

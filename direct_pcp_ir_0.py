@@ -1,18 +1,16 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative and recursive.
 
-    A demo with hard coded examples; without test driver overhead, without
-    dependencies. The parsing algorithm is that of 'pcp_ir_0.py'. This version
-    is intended to demonstrate the actual algorithm; that is, what is needed
-    to parse expressions with prefix, infix, and postfix operators. - Usage:
+    Demo with hard coded examples, no test driver, no dependencies.
+    The parsing algorithm is that of 'pcp_ir_0.py'. The script is intended to
+    demonstrate the actual algorithm; that is, what is needed to parse
+    expressions with prefix, infix, and postfix operators. Usage:
 
     python3 direct_pcp_ir_0.py
 
-    or possibly
+    or possibly:   ./direct_pcp_ir_0.py
 
-    ./direct_pcp_ir_0.py
-
-    Version 2021-03-27. Use with Python 3.5 or higher.
+    Version 2021-09-13. Use with Python 3.5 or higher.
 '''
 
 # Define binding powers in global dictionaries LBP, RBP
@@ -20,7 +18,7 @@
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
 RBP = {"+": 15, "*": 18, "&": 9, "^": 20}     # integers in range 6 to 99.
 
-# Define four code examples. Tokens must be space-separated here!
+# Define some code examples. Tokens must be space-separated here!
 DEMOCODES = ['x + 3.4 * y', 'a + b + c', 'n ^ m ^ k', 'xx + b ! * & c + 1']
 
 
@@ -85,7 +83,7 @@ def s_expr(n_list):
 
 # Tokenize, parse and print results
 
-print(("Parse results for {} code strings\n" + "-"*33).format(len(DEMOCODES)))
+print(f"Parse results for {len((DEMOCODES))} code strings\n" + "-"*32)
 for dc in DEMOCODES:
     print(dc, " "*(20-len(dc)), " ==> ", s_expr(parse_expr(tokenizer(dc))))
 
@@ -96,4 +94,4 @@ for oator in sorted(LBP, reverse=True):
     if oator != "$END":
         no_fake_lbp = LBP[oator] if LBP[oator] < 100 else "   "
         no_fake_rbp = RBP[oator] if RBP[oator] < 100 else "   "
-        print("{:8}  {:3}  {:3}".format(oator, no_fake_lbp, no_fake_rbp))
+        print(f"{oator:8}  {no_fake_lbp:3}  {no_fake_rbp:3}")

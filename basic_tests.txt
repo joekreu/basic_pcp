@@ -4,7 +4,7 @@
 # These test data are meant to be used with the bash script 'run_tests.sh'.
 
 # Empty lines and lines starting with # (comments) will be ignored.
-# The other lines contain one tests each. Do not quote the tests.
+# The other lines contain one test code each. Do not quote the tests.
 
 # Test codes can be
 #   - directly specified expressions, such as: a^b + c
@@ -19,10 +19,10 @@
 # Although the option '-r' without following values is ok on the command line,
 # a simple letter 'r' in the first columns of an otherwise empty line will
 # not work here.
-# Directly specified expressions can be indented, e.g., start with 2 spaces.
+# Directly specified expressions can be indented, e.g., started with 2 spaces.
 
-# Parse results will be considered 'correct' if they are 'precedence correct'.
-# See function 'is_prec_correct' and comments in the code of 'helpers.py'.
+# Parse results will be considered 'correct' if they are 'weight correct'.
+# See function 'is_weight_correct' and comments in the code of 'helpers.py'.
 
 # In directly specified expressions it is safe to always separate tokens by
 # one or more spaces. Transition of an alphanumeric character to a special
@@ -33,7 +33,7 @@
 
 # Edit operator definitions in 'binding_powers.json' if required.
 
-# Version: 2022-03-22.
+# Version: 2022-09-13.
 
   a
   3 !

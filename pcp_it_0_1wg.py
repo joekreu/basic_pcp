@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative (sort of 'shunting
-    yard parser). There is one stack and one 'while' loop in 'parse_expr'.
+    yard' parser). There is one stack, and one 'while' loop in 'parse_expr'.
 
     This parser uses tokenizer_e which is implemented as generator. The call
     'tokenizer_e(code)' returns a 'generator' for the tokens in 'code'.

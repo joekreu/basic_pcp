@@ -1,22 +1,21 @@
-''' Helper functions and other definitions for the basic parsers.
-
-    Objects whose names begin with an underscore are 'private' - they are
-    intended for use only in this module.
-
-    Compatible Python versions: 3.8 or higher (because of "walrus" operator).
-    There is only minimal error handling. For example, an operator at the
-    place of an operand will not raise an exception. Instead, the misplaced
-    operator will be treated as an operand. On the other hand, an operand
-    (i.e., a token without binding powers) at the place of an operator will
-    raise an exception.
+''' Helper functions and other definitions for all basic parsers.
 
     See docs in README or PARSING.
 
-    Version 2022-06-15.
+    Objects whose names begin with an underscore are considered "private".
+
+    There is only minimal error handling. For example, an operator (a token
+    with binding powers) at the place of an operand will be treated as
+    operand. On the other hand, an atomic operand (i.e., a token without
+    binding powers) at the place of an operator will raise an exception.
+
+    Python 3.8 or higher is required.
+    The "walrus" operator ':=' and the 'nonlocal' keyword are used.
+    Version 2022-09-15.
 '''
 
 
-# Imports from standard library. The specified items are used here.
+# Imports from standard library. Required items are listed in the comments.
 import sys          # sys.argv, sys.executable
 import math         # math.inf
 import os           # os.path
@@ -25,17 +24,12 @@ import functools    # functools.reduce
 import random       # random.randint
 import json         # json.load
 
-# Import from local module.
+# Import from local module
 import bintree      # bintree.FormatBinaryTree
 
-# === Global constants ===
+# === Global constants that can be customized to your needs ===
 
-_HELPERS_VERSION = "0.6.0, 2022-06-15"
-
-# Valid command line options. The operator '|' between sets means 'set union'.
-# The three options -h -? --help are equivalent.
-_OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
-_OPTIONS = frozenset(_OUTPUTOPTIONS | {"r", "d"})
+_HELPERS_VERSION = "0.6.2, 2022-09-15"
 
 # Name of JSON file containing binding powers. These binding powers will be
 # ignored if one of the command line option -r, -d is in effect.
@@ -54,6 +48,8 @@ _GEN_OP_R = ")"               # Right part.
 
 _GEN_OP_CHARS = frozenset({_GEN_OP_L, _GEN_OP_C, _GEN_OP_R, "_"})
 
+_INF_SIGN = chr(8734)         # The unicode point for the infinity sign.
+
 # Maximal number of tokens accepted for output of all possible parse trees.
 # A value of 11 means 5 operators (including unary operators) and 6 operands.
 _MAX_FOR_PRINTED_TREES = 11
@@ -65,9 +61,12 @@ _RAND_L_EXPR = 6
 
 # === Other global definitions ===
 
-AtomicType = (str, int, float)   # To be used in tests (atom or subtree?)
+# Valid command line options. The operator '|' between sets means 'set union'.
+# The three options -h -? --help are equivalent.
+_OUTPUTOPTIONS = frozenset({"v", "w", "s", "u", "q", "qq", "h", "?", "-help"})
+_OPTIONS = frozenset(_OUTPUTOPTIONS | {"r", "d"})
 
-INF_SIGN = chr(8734)             # 8734 is unicode for the infinity-sign
+_AtomicType = (str, int, float)   # To be used in tests (atom or subtree?)
 
 Token = collections.namedtuple("Token", "nam lp rp")  # Used with tokenizer_d.
 
@@ -157,7 +156,7 @@ def _create_expr_from_bp(n_string):
 
 
 def _isatomic(subex):
-    return isinstance(subex, AtomicType)  # Def of AtomicType see above.
+    return isinstance(subex, _AtomicType)  # For def of _AtomicType see above
 
 
 def s_expr(n_list):
@@ -253,8 +252,7 @@ def tokenizer_a(code):
         ''' Function to be returned by tokenizer_a. '''
 
         nonlocal pos
-        pos += advance
-        return toklist[pos]
+        return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
 
@@ -270,9 +268,8 @@ def tokenizer_b(code):
     def toks(advance=0):
         ''' Function to be returned (a closure). '''
 
-        nonlocal pos   # This requires Python 3.*
-        pos += advance
-        return toklist[pos]
+        nonlocal pos
+        return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
 
@@ -320,12 +317,12 @@ def _right_weight(tree):
             min(RBP[tree[0]], _right_weight(tree[2])))
 
 
-def _is_prec_correct(tree):
-    ''' Is tree precedence correct? '''
+def _is_weight_correct(tree):
+    ''' Is tree weight correct? '''
 
     return (_isatomic(tree) or
-            _is_prec_correct(tree[1]) and
-            _is_prec_correct(tree[2]) and
+            _is_weight_correct(tree[1]) and
+            _is_weight_correct(tree[2]) and
             _left_weight(tree[2]) > RBP[tree[0]] and
             _right_weight(tree[1]) >= LBP[tree[0]])
 
@@ -336,12 +333,12 @@ def _top3_weights(tree):
     '''
 
     def _tws(atree):
-        ''' Weights of a tree, as string. INF_SIGN is the infinity sign. '''
-        return (" " + INF_SIGN if _isatomic(atree) else
+        ''' Weights of a tree, as string. _INF_SIGN is the infinity sign. '''
+        return (" " + _INF_SIGN if _isatomic(atree) else
                 str(_left_weight(atree)) + "..." + str(_right_weight(atree)))
 
     if _isatomic(tree):
-        return " " + INF_SIGN
+        return " " + _INF_SIGN
     twtext = "\n" + " " * 12 + _tws(tree)
     return twtext + "\n" + _tws(tree[1]) + " "*18 + _tws(tree[2])
 
@@ -402,7 +399,7 @@ def _range(toklis, pos):
 
 
 def _is_range_correct(toklis, tree, rfrom, rto):
-    ''' Given a list of tokens and tree for this list, is the tree
+    ''' Given a list of tokens and a tree for this list, is the tree
         'range correct'? rfrom and rto are the start and the end
         position (one based) in toklist for tree. The function is
         recursive. At start, rfrom = 1 and rto = len(toklis).
@@ -423,8 +420,7 @@ def _print_ranges(toklis):
     print("\nOperator ranges" if len(toklis) > 1 else "")
     for pos in range(1, len(toklis), 2):
         lpos, rpos = _range(toklis, pos+1)
-        print("{:2} .. {:2} ({:3}) .. {:2}".format(lpos, pos+1, toklis[pos],
-                                                   rpos))
+        print(f"{lpos:2} .. {pos+1:2} ({toklis[pos]:3}) .. {rpos:2}")
 
 
 def _check_all_parsings(toklis):
@@ -435,23 +431,23 @@ def _check_all_parsings(toklis):
     if not (all_parse_trees := _makebintrees(toklis)):
         return
     if (nppt := len(all_parse_trees)) == 1:
-        print("\nOne possible parse tree. It is precedence correct.")
+        print("\nOne possible parse tree. It is weight correct.")
     else:
         print("\nAll " + str(nppt) + " possible parse trees are checked.")
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
-            print("Precedence correct (PREC COR) and range correct " +
-            "(RANG COR)\ntrees are printed (there should be exactly one):")
+            print("Weight correct (WEIG COR) and range correct (RANG COR)" +
+                  "\ntrees are printed (there should be exactly one):")
         else:
-            print("Exactly one tree should be precedence correct (PREC COR)" +
-                  " and the same\n" +
-                  "tree should be the only range correct (RANG COR) tree.")
+            print("Exactly one parse tree should be weight correct and " +
+                  "range correct.\nOther parse trees should be " +
+                  "neither weight nor range correct.")
     for tree in all_parse_trees:
-        preced_correct = _is_prec_correct(tree)
+        weight_correct = _is_weight_correct(tree)
         range_correct = _is_range_correct(toklis, tree, 1, len(toklis))
-        if (not (preced_correct or range_correct) and
+        if (not (weight_correct or range_correct) and
            len(toklis) > _MAX_FOR_PRINTED_TREES):
             continue
-        print(s_expr(tree), " PREC COR" if preced_correct else " --------",
+        print(s_expr(tree), " WEIG COR" if weight_correct else " --------",
               end="")
         if _root_pos(tree):
             print("  Root pos " + str(_root_pos(tree) + 1), end=" ")
@@ -460,7 +456,7 @@ def _check_all_parsings(toklis):
             print("range " + str(_lrange(toklis, _root_pos(tree) + 1,
                                          cover_lbp)) + " ... " +
                   str(_rrange(toklis, _root_pos(tree) + 1, cover_rbp)),
-                  "RANG_COR" if range_correct else "--------")
+                  "RANG COR" if range_correct else "--------")
         else:              # _root_pos is None if tree is a single atom
             print()
 
@@ -511,10 +507,11 @@ def _print_help():
           "-w    Print parse tree upside down, otherwise works like -v.\n" +
           "-s    Standard output, tree representation is included" +
           " (default).\n" +
-          "-u    Print parse tree upside down; otherwise standard output.\n" +
+          "-u    Print parse tree upside down; otherwise like standard" +
+          " output.\n" +
           "-q    Less verbose output (less than standard); no parse tree.\n" +
-          "-qq   Print only correctness ('+' or '-'). " +
-          "For use in test scripts.\n")
+          "-qq   Print only weight correctness ('+' or '-'). " +
+          "For use in test\n      scripts.")
     print("-r    Create and parse random expression with lexpr" +
           " binary operators\n" +
           "      taken from nop random operators with nbp random" +
@@ -536,14 +533,14 @@ def _print_help():
           "8" + _GEN_OP_C + "8" + _GEN_OP_R + " A3'.\n")
     print("-h    Print version information and help, then exit.\n")
 
-    print("Any basic parser can be run this way." +
-          " - Use Python 3.8 or later.")
     print("Use the end-of-options marker '--' (two hyphens) before expr " +
           "if expr\n" +
           "starts with a hyphen. Example: python pcp_ir_0.py -- '-5+6'.\n" +
           "For options -r, -d: Names of generated operators contain their" +
           " lbp,\nrbp values. For example, the operator '" + _GEN_OP_L + "6" +
-          _GEN_OP_C + "7" + _GEN_OP_R + "' has lbp=6, rbp=7.")
+          _GEN_OP_C + "7" + _GEN_OP_R + "' has lbp=6, rbp=7.\n\n" +
+          "Any basic parser can be run this way. See docs in README or " +
+          "PARSING\nfor details." + " - Use Python 3.8 or later.")
 
 
 def _get_options():
@@ -568,7 +565,6 @@ def _get_options():
     if len(options & _OUTPUTOPTIONS) > 1:    # '&' is intersection of sets
         print("Use at most one of the output option: " +
               " ".join("-" + opt for opt in sorted(list(_OUTPUTOPTIONS))))
-#              "See 'python" + sys.argv[0] + " -h'")
         return False, options, 0, 0, False
 
     for option in options:
@@ -644,13 +640,14 @@ def _print_result(res, res1, quiet, code, upsidedown):
         upsidedown --  Boolean: Print parse tree upside down?
     '''
 
-    pc_ok = _is_prec_correct(res1)  # Correctness is checked with fake tokens
+    pc_ok = _is_weight_correct(res1)  # checked with fake tokens
     if quiet <= 0:
         print("Parse result as S-expression; with fake tokens for unary " +
               "operators if present:")
         print(s_expr(res))  # With or without fake tokens, depending on parser
     elif quiet == 1:
-        print("ok" if pc_ok else "not precedence correct! ", end="")
+        print("Weight correct" if pc_ok
+              else "Result is not weight correct", end="")
         print(": " + s_expr(res))
     else:
         print("+" if pc_ok else "-")
@@ -667,8 +664,8 @@ def _print_result(res, res1, quiet, code, upsidedown):
     btree.printall()
 
     if quiet <= 0:
-        print("\nParse result is precedence correct." if pc_ok
-              else "** Parse result is not precedence correct!")
+        print("\nParse result is weight correct." if pc_ok
+              else "** Parse result is not weight correct!")
         print("\nLeft and right weight of the root operator of the parse" +
               " tree\nand weights of the root operators of the first order" +
               " subtrees:")
@@ -713,8 +710,8 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
         return 1
 
     if not random_or_cl_defined:
-        with open(os.path.dirname(os.path.abspath(__file__)) +
-                  "/" + _BP_JSON_FILENAME, "r") as bp_jsonfile:
+        with open(os.path.dirname(os.path.abspath(__file__)) + "/" +
+                  _BP_JSON_FILENAME, "r", encoding="utf-8") as bp_jsonfile:
             bp_dict = json.load(bp_jsonfile)  # binding powers from JSON file
 
         LBP.update(bp_dict["LBP"])       # Set values of global LBP, RBP

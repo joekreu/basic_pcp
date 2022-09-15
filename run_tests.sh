@@ -26,7 +26,7 @@ askforret=6  # Ask for 'return' after printing the results of $askforret tests
 ncodes=0     # Number of code examples in the input ("$testcodes").
 nparsers=0   # Number of parsers (i.e., files matching "$parsers")
 ntests=0     # Number of individual tests (should be ncodes * nparsers)
-ncorrect=0   # Number of precedence correct tests (should be equal to ntests)
+ncorrect=0   # Number of weight correct tests (should be equal to ntests)
 verbose=1    # Verbose mode?
 
 SCRIPTDIR=$(dirname "${BASH_SOURCE[0]}")
@@ -103,9 +103,9 @@ if [[ "$verbose" = 1 ]]; then
 
     echo
     echo "A '+' indicates success, a '-' indicates failure of one test for"
-    echo "one parser. 'Success' means: The result is 'precedence correct'."
-    echo "Results are formatted as Lisp-like S-expressions. Results contain"
-    echo "fake operands (\$PRE, \$POST) for unary operators."
+    echo "one parser. 'Success' means: The result is 'weight correct' (see"
+    echo "documentation). Results are formatted as Lisp-like S-expressions." 
+    echo "Results contain fake operands (\$PRE, \$POST) for unary operators."
 fi
 
 while IFS= read -r -u 10 code; do
@@ -175,6 +175,6 @@ echo "$ncodes test codes loaded from the file \"$testcodes\"."
 echo "$nparsers parsers (files matching \"$parsers\") run on each test code."
 echo -n "$ntests tests run - should be $ncodes * $nparsers = " 
 echo $((ncodes * nparsers))
-echo "$ncorrect results are precedence correct."
+echo "$ncorrect results are precedence correct (i.e., weight correct)."
 
 exit
