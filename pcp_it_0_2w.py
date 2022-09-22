@@ -8,16 +8,16 @@ import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser.
 
 def parse_expr(toks):
     ''' Precedence climing parser. Iterative parsing with two nested
-        'while' loops.
+        'while' loops, an operand stack and an operator stack.
     '''
 
     orand_stack, oator_stack = [], []  # Python lists, used as stacks
     oator = "$BEGIN"
     while h.LBP[oator] >= 0:
-        orand_stack.append(toks(1))
+        orand_stack.append(toks(1))                     # Shift step
         oator_stack.append(oator)
         oator = toks(1)
-        while h.RBP[oator_stack[-1]] >= h.LBP[oator]:
+        while h.RBP[oator_stack[-1]] >= h.LBP[oator]:   # "Reduce" steps
             right, left = orand_stack.pop(), orand_stack.pop()
             orand_stack.append(h.c_sex(oator_stack.pop(), left, right))
 

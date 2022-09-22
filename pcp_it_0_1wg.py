@@ -14,15 +14,19 @@ def parse_expr(token):
     ''' Precedence climbing parser, iterative parsing with one 'while' loop.
     '''
 
-    oo_stack = [next(token), next(token)]    # Get $BEGIN and the first atom.
+    oo_stack = [next(token), next(token)]          # '$BEGIN', first operand
     oator = next(token)
+    if h.c_sex.print_subex_creation:               # Not needed for the 
+        print("stack: " + h.s_expr(oo_stack))      # actual parsing
     while len(oo_stack) > 2 or h.LBP[oator] >= 0:
-        if h.RBP[oo_stack[-2]] >= h.LBP[oator]:
+        if h.RBP[oo_stack[-2]] >= h.LBP[oator]:    # "Reduce"
             right = oo_stack.pop()
             oo_stack.append(h.c_sex(oo_stack.pop(), oo_stack.pop(), right))
-        else:
+        else:                                      # "Shift"
             oo_stack += [oator, next(token)]
             oator = next(token)
+        if h.c_sex.print_subex_creation:           # Not needed for
+            print("stack: " + h.s_expr(oo_stack))  # the actual parsing
 
     return oo_stack[1]   # oo_stack[0] is the '$BEGIN' token
 

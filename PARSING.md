@@ -1,6 +1,6 @@
 ---
 title: "Precedence Climbing Parsing based on Binding Powers and Token Insertion"
-date: "June 2022"
+date: "September 2022"
 author: "joekreu"
 ---
 
@@ -512,14 +512,12 @@ Documentation is in this guide (`PARSING.md`), in `README.md` and in
 `LICENSE.txt`.
 
 The parser modules are independent of each other. The basic parsers import
-functions and other definitions from the module `helpers`, e.g., the
-tokenizers and the test driver function `run_parser`. The `helpers` module in
-turn imports the class `FormatBinaryTree` from module `bintree`.
+functions and other definitions from the module `helpers`. The `helpers`
+module in turn imports the class `FormatBinaryTree` from module `bintree`.
 
-Among others the module `helpers` contains a test driver for the basic
-parsers and functions for pre-processing the input.
-Most of the code in this module is used for presentation of the
-results and for correctness checks.
+The module `helpers` contains the test driver `run_parser` for
+the basic parsers, the tokenizers, functions for pre-processing the input,
+code for presentation of the results and for correctness checks.
 
 The parser modules invoke the test driver, passing the parse function and the
 corresponding tokenizer as parameters.
@@ -530,8 +528,22 @@ The `helpers` module uses the following items from system modules: \
 
 Comments in the code and data files provide additional information.
 
-For a much shorter, self-contained parser code, see `direct_pcp_ir_0.py` or
-the gist `infix_parser.py` at <https://gist.github.com/joekreu>.
+The standard parser modules are somewhat more complex than would be
+necessary for the actual parsing:
+
+- For the creation of subexpressions, the function `helpers.c_sex` is used.
+This allows optional output of the newly created subexpressions. Otherwise,
+simply `[operator, subex1, subex2]` could be used instead of a call
+`helpers.c_sex(operator, subex1, subex2)`.
+- The iterative parsers `pcp_it_0_1w` and `pcp_it_0_1wg` contain code for
+the optional output of the explicit operand/operator stack at each pass of
+the loop.
+- An artificial `$BEGIN` token, with a negative _rbp_, is inserted by the
+tokenizers before all other tokens. This token is not referenced by all
+basic parsers.
+
+For a short, self-contained parser module see `direct_pcp_ir_0.py`, or the
+gist `infix_parser.py` at <https://gist.github.com/joekreu>.
 
 ## 5. Acknowledgements and References
 

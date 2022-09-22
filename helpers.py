@@ -176,7 +176,10 @@ def extr_names(plist):
 
 def c_sex(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
+
         'print_subex_creation' is an attribute of the function 'c_sex'.
+        The first line below and the return statement are essential. The
+        rest creates the possibility to better display how the parser works.
     '''
 
     sub = [oator, oand1, oand2] if oand2 else [oator, oand1]
@@ -501,9 +504,12 @@ def _print_help():
           "      _ " + _GEN_OP_L + " " + _GEN_OP_C + " " + _GEN_OP_R +
           " are considered alphanumeric. A minus sign followd by\n" +
           "      a digit is also considered alphanumeric.\n\n" +
-          "-v    Maximum output: In addition to standard output, " +
-          "print\n      subexpressions in order of creation, " +
-          "and operator ranges.\n" +
+          "-v    In addition to standard output, " +
+          "print subexpressions in order\n      of creation " +
+          "and operator ranges." +
+          " For pcp_it_0_1w, pcp_it_0_1wg\n" +
+          "      also print explicit" +
+          " stack at each pass of the loop.\n" +
           "-w    Print parse tree upside down, otherwise works like -v.\n" +
           "-s    Standard output, tree representation is included" +
           " (default).\n" +
@@ -531,7 +537,7 @@ def _print_help():
           "6" + _GEN_OP_C + "7" + _GEN_OP_R + " " + _GEN_OP_L +
           "_" + _GEN_OP_C + "9" + _GEN_OP_R + " A2 " + _GEN_OP_L +
           "8" + _GEN_OP_C + "8" + _GEN_OP_R + " A3'.\n")
-    print("-h    Print version information and help, then exit.\n")
+    print("-h    Print version information and this help, then exit.\n")
 
     print("Use the end-of-options marker '--' (two hyphens) before expr " +
           "if expr\n" +
