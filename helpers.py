@@ -164,7 +164,7 @@ def s_expr(n_list):
         S-expression in a string. '''
 
     return (str(n_list) if _isatomic(n_list) else
-            "(" + " ".join([s_expr(p) for p in n_list]) + ")")
+            "(" + " ".join(s_expr(p) for p in n_list) + ")")
 
 
 def extr_names(plist):
@@ -254,15 +254,15 @@ def tokenizer_a(code):
     def toks(advance=0):
         ''' Function to be returned by tokenizer_a. '''
 
-        nonlocal pos
+        nonlocal pos             # 'nonlocal' requires Python 3.*
         return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
 
 
 def tokenizer_b(code):
-    ''' Tokenizer for pcp_ir_0_no_ins. No insertion of fake tokens for unary
-        operators.
+    ''' Tokenizer for pcp_ir_0_no_ins. No insertion of virtual (fake) operand
+        tokens for unary operators.
     '''
 
     toklist = ["$BEGIN"] + list(_raw_toklist(code)) + ["$END"]
@@ -271,7 +271,7 @@ def tokenizer_b(code):
     def toks(advance=0):
         ''' Function to be returned (a closure). '''
 
-        nonlocal pos
+        nonlocal pos             # 'nonlocal' requires Python 3.*
         return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
@@ -465,9 +465,9 @@ def _check_all_parsings(toklis):
 
 
 def _fakes_to_tree(tree, non_infix_ops):
-    ''' Helper function for run_parser. Add fake tokens to prefix and postfix
-        operator in parse tree. It is used for results of parsers that work
-        without fake tokens; not used for the parsing itself.
+    ''' Helper function for run_parser. Add virtual (fake) operands to prefix
+        and postfix operator in parse tree. It is used for results of parsers
+        that work without virtual operands. Not used for the parsing itself.
     '''
 
     if _isatomic(tree):
@@ -507,8 +507,7 @@ def _print_help():
           "-v    In addition to standard output, " +
           "print subexpressions in order\n      of creation " +
           "and operator ranges." +
-          " For pcp_it_0_1w, pcp_it_0_1wg\n" +
-          "      also print explicit" +
+          " For pcp_it_0_1w, pcp_it_0_1wg\n      also print explicit" +
           " stack at each pass of the loop.\n" +
           "-w    Print parse tree upside down, otherwise works like -v.\n" +
           "-s    Standard output, tree representation is included" +
@@ -516,8 +515,8 @@ def _print_help():
           "-u    Print parse tree upside down; otherwise like standard" +
           " output.\n" +
           "-q    Less verbose output (less than standard); no parse tree.\n" +
-          "-qq   Print only weight correctness ('+' or '-'). " +
-          "For use in test\n      scripts.")
+          "-qq   Print only weight correctness (+ or -). " +
+          "Use in test scripts.")
     print("-r    Create and parse random expression with lexpr" +
           " binary operators\n" +
           "      taken from nop random operators with nbp random" +
@@ -639,17 +638,16 @@ def _print_result(res, res1, quiet, code, upsidedown):
     ''' Print parse results. Output depends on 'quiet' and 'upsidedown',
         it may include parse tree, all possible parsings, correctness.
 
-        res        --  parse result (tree), possibly without fake tokens
-        res1       --  parse result with fake tokens
+        res        --  parse result (tree), possibly without virtual tokens
+        res1       --  parse result with virtual tokens
         quiet      --  One of -1, 0, 1, 2. Smaller means more output
         code       --  Original code to be parsed.
-        upsidedown --  Boolean: Print parse tree upside down?
+        upsidedown --  Boolean: If True print parse tree upside down
     '''
 
-    pc_ok = _is_weight_correct(res1)  # checked with fake tokens
+    pc_ok = _is_weight_correct(res1)  # checked with virtual operands
     if quiet <= 0:
-        print("Parse result as S-expression; with fake tokens for unary " +
-              "operators if present:")
+        print("Parse result as S-expression:")
         print(s_expr(res))  # With or without fake tokens, depending on parser
     elif quiet == 1:
         print("Weight correct" if pc_ok
@@ -661,7 +659,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     if quiet > 0:
         return 0 if pc_ok else 1
 
-    print("\nParse tree; fake tokens for unary operators (if present) " +
+    print("\nParse tree; virtual operands for unary operators " +
           "are not printed:\n")
 
     btree = bintree.FormatBinaryTree(res1)
@@ -681,7 +679,7 @@ def _print_result(res, res1, quiet, code, upsidedown):
     toks = tokenizer_a(code)
     while toks() != "$END":
         toklist.append(toks(1))
-    toklist.pop()  # Now toklist includes fake tokens, but not $BEGIN, $END
+    toklist.pop()  # Now toklist includes virtual tokens, but not $BEGIN, $END
     print("\nToken positions as used for checking the parse trees\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
@@ -705,7 +703,7 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
         tokenizer --  The tokenizer for the parse function (on of 'a' to 'e')
 
         fake_tokens_inserted  --  set False if the tokenier does not insert
-                                  fake tokens.
+                                  virtual operands.
     '''
 
     valid, code, quiet, random_or_cl_defined, upsidedown = _prepare_command()
@@ -728,6 +726,9 @@ def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
                      "post": {k for k in LBP if k not in RBP}}
 
     _set_bp()  # Set missing binding powers for unary operators, $BEGIN, $END
+    if quiet <= 0 and not fake_tokens_inserted:
+        print("This parser does not use virtual operands.")
+
     try:
         res = parsefun(tokenizer, code)
     except KeyError as parseerror:

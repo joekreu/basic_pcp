@@ -1,12 +1,13 @@
 ---
-title: "Precedence Climbing Parsing based on Binding Powers and Token Insertion"
-date: "September 2022"
-author: "joekreu"
+title: "Precedence Climbing Parsing based on Binding Powers and Insertion of Virtual Operands"
+date: "December 2022"
+author: "Jo Creutziger (joekreu)"
 ---
 
-The repository contains several demo implementations of iterative, recursive
+The repository contains sample implementations of iterative, recursive
 and mixed (iterative and recursive) expression parsers based on
-_binding powers_, _precedence climbing_ and _insertion of fake operands_.
+_binding powers_, _precedence climbing_ and
+_insertion of virtual (fake) operands_.
 Very few lines of Python code are enough for the core of a parser that creates
 a parse tree from operands and operators (prefix, infix, postfix) with
 virtually arbitrary binding powers.
@@ -29,7 +30,7 @@ infix operators:
 (1)   & a > 7 * b ! + 2
 ```
 
-Inserting 'fake operands' allows parsing unary operators as infix operators.
+Inserting 'virtual operands' allows parsing unary operators as infix operators.
 
 > _Note:_ The parsing algorithms presented here are much more powerful.
 > Using straightforward extensions, parenthesized subexpression, function
@@ -37,8 +38,8 @@ Inserting 'fake operands' allows parsing unary operators as infix operators.
 > be parsed. Instead of simply fetching the next atomic operand from the token
 > sequence, a whole _primary expression_ can be parsed recursively.
 >
-> _Fake operators_ can be inserted to support parsing, in addition to fake
-> operands.
+> _Virtual operators_ can be inserted to support parsing, in addition to
+> virtual operands.
 >
 > On the other hand, restrictions for valid expressions could be implemented,
 > for example, by disallowing some combinations of adjacent operators.
@@ -48,13 +49,12 @@ Inserting 'fake operands' allows parsing unary operators as infix operators.
 > _Note:_ _Token insertion_ is also used in another sense in connection with
 > parsing, namely for _error recovery_. This is not considered here.
 
-Generally, precedence climbing parsing of expressions can be controlled in one
-of the following two ways (other ways might exist):
+Precedence climbing parsing can be controlled in one of at least two ways:
 
-1. An operator has a _precedence_ (in the specific sense, i.e., a number) and
-an _associativity_ (one of the two values: _left_ or _right_). In some
-settings, _none_ can be a third possible value of _associativity_ (associative
-use of operator is not allowed).
+1. An infix operator has a _precedence_ (in the specific sense, i.e., a
+number) and an _associativity_ (one of the two values: _left_ or _right_). In
+some settings, _none_ can be a third possible value of _associativity_
+(associative use of operator is not allowed).
 2. _Binding powers_: An infix operator has a _left_ and a _right_
 _binding power_, denoted by _lbp_ and _rbp_. Initially, prefix operators have
 only an _rbp_ and postfix operator have only an _lbp_. Binding powers are
@@ -83,7 +83,7 @@ The _parsing rules_ consist of the set of valid operators and their binding
 powers. The rules can be dynamically loaded, for example, from a `csv` or
 a JSON file.
 
-Atomic operands (e.g., numbers and identifiers) consist of one _token_ only.
+Atomic operands (numbers and identifiers) consist of one _token_ only.
 
 The parser's job is to transform the sequence `(**)` into a _parse tree_,
 taking into account the parsing rules.
@@ -106,7 +106,7 @@ An operator will be right associative if its _rbp_ is less than its _lbp_,
 otherwise it will be left associative.
 
 Unary operators do not fit directly into the scheme `(**)`. They get adjusted
-to the basic situation by inserting 'fake' operands and 'fake' binding
+to the basic situation by inserting virtual operands and 'fake' binding
 powers. The left operand `$PRE` is inserted before a prefix operator,
 and the right operand `$POST` is inserted after a postfix operator.
 Furthermore, prefix operators are assigned a fake left binding power of `100`,
@@ -115,17 +115,22 @@ This procedure virtually converts the unary operators to infix
 operators, with typically very different _lbp_ and _rbp_. 'Normal'
 (user defined) binding powers are required to be less than 100.
 
-By inserting fake operands, the expression `(1)` becomes
+By inserting virtual operands, the expression `(1)` becomes
 
 ```text
 (2)   $PRE & a > 7 * b ! $POST + 2
 ```
 
-The procedure of fake operand insertion also works with two or more
+The procedure of virtual operand insertion also works with two or more
 consecutive prefix operators, and with two or more consecutive postfix
-operators. Multiple unary operators of the same kind (prefix or postfix)
-are always processed from "the inside to the outside", independent of the
-binding powers of the operators.
+operators.
+
+Multiple unary operators of the same kind (_prefix_ or _postfix_)
+are always processed from "the inside to the outside", independent of
+their binding powers. This is not an additional specification, but a result
+of the operand insertion, the assignment of the fake binding powers,
+and the general parse algorithms. Besides, it is of course in accordance with
+the expectations.
 
 For example, if `&` and `%` are prefix
 operators and `A` is an operand, then `& % A` will be parsed as
@@ -154,23 +159,23 @@ parse result can be one of the following:
 
 ```
 
-The fake tokens do not really need to be inserted. It is enough that the
+The virtual operands do not really need to be inserted. It is enough that the
 parser pretends that they are inserted. In fact, one of the ten parsers in
 this repository (`pcp_ir_0_no_ins`; see section 3.1) works like this.
-However, a real insertion, done by the tokenizer, greatly simplifies the
+However, a real insertion, done by the tokenizer, simplifies the
 parser's precedence climbing code, because it thereby only has to process
 infix expressions.
 
-Binding powers smaller than 6 are also considered 'reserved'. For example,
-a negative _lbp_ is assigned to the artificial `$END` token (see section 2).
-The benefits of other small 'internal' binding powers become visible in more
-elaborate parsers. E.g., the _comma_ can be parsed under certain conditions
-as a _left associative infix operator_ with small binding powers (e.g., with
-_lbp_ = _rbp_ = 5).
+Binding powers smaller than 6 are also considered 'reserved':
+A negative _lbp_ is assigned to the artificial `$END` token (see section 2).
+The benefits of other small 'internal' binding powers become visible with
+more powerful parsers. For example, the _comma_ can possibly be parsed
+as a _left associative infix operator_ with small binding powers
+(such as _lbp_ = _rbp_ = 5).
 
 In summary, user defined binding powers should be integers in range `6 to 99`.
 This does not seem to be a serious restriction. If required, the range could
-easily be extended.
+be extended at the expense of increasing the fake binding powers of 100.
 
 The _lbp_ and _rbp_ values of a specific operator can be equal or differ
 by any number, as long as they are in this range. Binding powers of unary
@@ -182,16 +187,16 @@ These lists can be formatted as Lisp-like _S-expressions_.
 For example,
 parsing `5 + 3 ! * 4` will create the list `[+, 5, [*, [!, 3, $POST], 4]]`;
 formatted as an S-expression this is `(+ 5 (* (! 3 $POST) 4))`.
-Fake operands can easily be removed from the parse tree, so finally we get
-`(+ 5 (* (! 3) 4))`.
+Virtual operands can easily be removed from the parse tree, so finally we can
+get `(+ 5 (* (! 3) 4))`.
 
 ### 1.1 Goals
 
 The main goals of this repository are
 
-1. Find and compare demo implementations of precedence climbing algorithms
+1. Find and compare sample implementations of precedence climbing algorithms
 based on binding powers. Encourage experimentation.
-2. Use insertion of fake operands to facilitate parsing of unary operators.
+2. Use insertion of virtual operands to facilitate parsing of unary operators.
 3. Separate definition of parsing rules from the implementation of the
 parsers.
 4. Better understand the meaning of _precedence correct_ parsing.
@@ -228,12 +233,12 @@ as `5 ! * 7` (4 tokens); `4*-2` is tokenized as `4 * -2` (3 tokens).
 Operands should consist of alphanumeric characters, though this is not
 checked.
 
-The tokenizers are also responsible for inserting the fake operands `$PRE` and
-`$POST` (except for `tokenizer_b`, see below). In addition, a special `$BEGIN`
-token is placed at the beginning, and an `$END` token is placed at the end of
-the token sequence. `$BEGIN` and `$END` can act as a kind of _operators_ in
-the process of parsing. In this context, a negative _rbp_ is assigned to
-`$BEGIN` and a negative _lbp_ to `$END`.
+The tokenizers are also responsible for inserting the virtual operands `$PRE`
+and `$POST` (except for `tokenizer_b`, see below). In addition, a special
+`$BEGIN` token is placed at the beginning, and an `$END` token is placed at
+the end of the token sequence. `$BEGIN` and `$END` can act as a kind of
+_operators_ (with very low precedence) in the process of parsing. Therefore, a
+negative _rbp_ is assigned to `$BEGIN` and a negative _lbp_ to `$END`.
 
 The complete token sequence generated by the tokenizer for the example (1) is
 
@@ -245,20 +250,20 @@ The complete token sequence generated by the tokenizer for the example (1) is
  > With a 'real' tokenizer (usually based on _regular expressions_) the
  > rules for separation of tokens (by whitespace or transition to another
  > kind of characters) can be improved. \
- > _Note 2:_ Only the iterative parsers (see 3.1) explicitly reference the
- > `$BEGIN` token. But all parsers assume a token before the first operand.
+ > _Note 2:_ Only the iterative parsers in this repo reference the _rbp_
+ > of `$BEGIN`.
 
-There are five tokenizers in this repository:
-`tokenizer_a` to `tokenizer_e`. The standard is `tokenizer_a`,
-the others are included mainly because of special requirements of some
-parsers. The tokenizers provide interfaces for the actual parsing.
+The tokenizers provide interfaces for the actual parsing. There are five
+tokenizers in this repository: `tokenizer_a` to `tokenizer_e`. The standard
+is `tokenizer_a`, the others are included mainly because of special
+requirements of some parsers.
 
 `tokenizer_a` returns a _function_. If `code` is a valid
 code string, and `toks = tokenizer_a(code)`, then
 `toks(0)` (or simply `toks()`) will return the current token, `toks(1)`
 will advance by one token and return the new current token. `tokenizer_b`
-does not insert the fake tokens `$PRE` and `$POST`, otherwise it works
-like `tokenizer_a`.
+does not insert the virtual operands `$PRE` and `$POST`, otherwise it
+works like `tokenizer_a`.
 
 `tokenizer_e` is a _generator_ (in the sense of Python) that returns an
 _iterator_ on the tokens. A tokenizer implemented as generator can easily
@@ -267,9 +272,9 @@ be used in _iterative_ (_shunting yard_) parsers.
 `tokenizer_c` and `tokenizer_d` return a singly linked list of tokens.
 
 For `tokenizer_d`, a _token_ is a named tuple that contains the binding
-powers of operator tokens. This allows the implementation of a more
-_functional_ parser because, in this way, access to the global data
-`LBP` and `RBP` can be avoided.
+powers of operator tokens. In this way, access to global data can be
+avoided, which allows the implementation of more _functional_ parsers
+(in the sense of functional programming).
 
 For the other tokenizers, a token is simply the string that represents the
 token. In this case, a token is recognized as an _operator token_ if it is
@@ -336,7 +341,7 @@ Analysis of the code and test results support the following claim
 
 This should also justify the use of the generic term _precedence climbing_.
 
-> _Note:_ The term _precedence_ is used in both a generic sense and a
+> _Note:_ The term _precedence_ can be used in both a generic sense and a
 > specific sense. \
 > In the generic sense, it is about making a precedence
 > decision between operators, in otherwise ambiguous situations. \
@@ -383,8 +388,8 @@ code to be parsed. Example:
 python3 pcp_rec_0_0.py 'xx + 5 ! * n ^ 2'
 ```
 
-Use the correct interpreter name (e.g., `python` instead of `python3` if
-this is required). Enclose the code in single quotes (Linux) or double quotes
+Use the correct name for the Python 3 interpreter. Enclose the
+code in single quotes (Linux) or double quotes
 (Windows?). Tokens are separated by whitespace, or by transition from an
 alphanumeric to a special character or vice versa. In this regard, the four
 characters `_`, `(`, `)`, `;` are considered alphanumeric. A minus sign
@@ -392,16 +397,15 @@ immediately followed by a digit is also considered alphanumeric. Operands
 should be identifiers or integers (do not specify floating point numbers).
 
 Use the option `-h` (with any basic parser) to find out all ways to run the
-parsers. There are several options that control the output -- the output can be
-more verbose or more concise.
+parsers:
 
 ```shell
 python3 pcp_ir_0.py -h
 ```
 
-The output can, among others, contain a two-dimensional representation of the
-parse tree and indications of the _correctness_ of the parsing. This is to
-facilitate experimentation.
+Several options control the amount of output. The output can, among others,
+contain a two-dimensional representation of the parse tree and indications
+of the _correctness_ of the parsing. This is to facilitate experimentation.
 
 > _Note:_ The terms _precedence correctness_, _weight correctness_,
   _range correctness_ of parsing, _root operator weight_,  that may occur
@@ -436,8 +440,8 @@ taken randomly from a collection of up to `nop` operators. The _lbp_ and _rbp_
 values of the operators are taken randomly and independently, from the range
 `6 ... 6+nbp-1`. Values that are not specified on the command line
 default to 6. The generated operators are of the form `(lbp;rbp)`, where
-`lbp` and `rbp` are the binding powers. E.g., `(6;8)` is an operator with
-`lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . For example,
+`lbp` and `rbp` are the binding powers. For example, `(6;8)` is an operator
+with `lbp=6`, `rbp=8`. The operands are denoted by `A0`, `A1`, ... . The command
 
 ```shell
 python3 pcp_it_0_2w.py -r 4 3
@@ -539,7 +543,7 @@ simply `[operator, subex1, subex2]` could be used instead of a call
 the optional output of the explicit operand/operator stack at each pass of
 the loop.
 - An artificial `$BEGIN` token, with a negative _rbp_, is inserted by the
-tokenizers before all other tokens. This token is not referenced by all
+tokenizers before all other tokens. This _rbp_ is not required by all
 basic parsers.
 
 For a short, self-contained parser module see `direct_pcp_ir_0.py`, or the

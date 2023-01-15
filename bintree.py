@@ -69,7 +69,7 @@ class _ListOfLines:
         self.lines.reverse()
         for linenum, line in enumerate(self.lines):
             self.insert_at(linenum, 0,
-                           "".join([SWAPDIC.get(s, s) for s in list(line)]))
+                           "".join(SWAPDIC.get(s, s) for s in list(line)))
 
 
 class FormatBinaryTree(_ListOfLines):

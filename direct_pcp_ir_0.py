@@ -1,31 +1,29 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative and recursive.
 
-    Demo with hard coded examples, no test driver, no dependencies.
-    The parsing algorithm is that of 'pcp_ir_0.py'. The script is intended to
-    demonstrate the actual algorithm; that is, what is needed to parse
-    expressions with prefix, infix, and postfix operators. Usage:
+    This is a demo without dependencies. Expressions can contain prefix,
+    infix, and postfix operators. Examples are 'hard coded'.
 
-    python3 direct_pcp_ir_0.py
+    Usage:  python3 direct_pcp_ir_0.py    (or possibly:  ./direct_pcp_ir_0.py)
 
-    or possibly:   ./direct_pcp_ir_0.py
-
-    Version 2021-09-13. Use with Python 3.5 or higher.
+    Version 2023-01-07   Use with Python 3.5 or higher.
 '''
 
 # Define binding powers in global dictionaries LBP, RBP
-
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
 RBP = {"+": 15, "*": 18, "&": 9, "^": 20}     # integers in range 6 to 99.
 
 # Define some code examples. Tokens must be space-separated here!
-DEMOCODES = ['x + 3.4 * y', 'a + b + c', 'n ^ m ^ k', 'xx + b ! * & c + 1']
+DEMOS = ['a + b', '& x', 'n !', 'x + 3.4 * y', 'x * 3.4 + y', 'a + b + 12',
+         'n ^ m ^ k', 'xx + b ! * & c + 1']
 
+
+# Define functions for tokenization, parsing and output formatting
 
 def tokenizer(code):
-    ''' Very simple tokenizer; returns a tokenizer function for 'code'. '''
+    ''' Very simple tokenizer. Return a tokenizer function for 'code'. '''
 
-    for operator in RBP:             # Set LBP, RBP to 100 if not already set.
+    for operator in RBP:             # Set LBP, RBP to 100 if not already set
         LBP.setdefault(operator, 100)
     for operator in LBP:
         RBP.setdefault(operator, 100)
@@ -34,18 +32,18 @@ def tokenizer(code):
     toklist = ["$BEGIN"]             # Start to create the 'toklist'.
     for tok in code.split():         # Split 'code' at spaces.
         if LBP.get(tok) == 100:
-            toklist.append("$PRE")   # Insert prefix dummies.
+            toklist.append("$PRE")   # Insert dummy before prefix operator
         toklist.append(tok)          # Insert token from 'code'.
         if RBP.get(tok) == 100:
-            toklist.append("$POST")  # Insert postfix dummies.
+            toklist.append("$POST")  # Insert dummy after postfix operator
 
-    toklist.append("$END")
+    toklist.append("$END")           # Finish toklist
     pos = 0                          # Initialise the state of the tokenizer.
 
     def toks(advance=0):
         ''' This function will be returned by the call 'tokenizer(code)'
 
-            toks() or toks(0): Return the current token.
+            toks()             Return the current token.
             toks(n):           Advance n tokens, then return the current token
         '''
 
@@ -63,13 +61,13 @@ def parse_expr(toks, min_rbp=0):
         toks    -- the tokenizer function returned by 'tokenizer(code)'.
         min_rbp -- rbp for comparison with lbp of following operators
 
-        Use global LBP[op], RBP[op]  -- binding powers of the operator 'op'.
+        Global: LBP[op], RBP[op]  -- binding powers of the operator 'op'.
 
         Return the parse tree as nested Python list.
     '''
 
-    sub, _ = toks(1), toks(1)       # Advance and assign to sub, advance again
-    while min_rbp < LBP[toks()]:    # toks() should return an operator here.
+    sub, _ = toks(1), toks(1)      # Advance and assign to sub, advance again.
+    while min_rbp < LBP[toks()]:   # toks() should return an operator or $END.
         sub = [toks(), sub, parse_expr(toks, RBP[toks()])]
     return sub
 
@@ -77,21 +75,19 @@ def parse_expr(toks, min_rbp=0):
 def s_expr(n_list):
     ''' Format a nested Python list as Lisp-like S-expression in a string. '''
 
-    return (str(n_list) if isinstance(n_list, str) else
-            "(" + " ".join([s_expr(p) for p in n_list]) + ")")
+    return (str(n_list) if isinstance(n_list, (str, int, float)) else
+            "(" + " ".join(s_expr(p) for p in n_list) + ")")
 
-
-# Tokenize, parse and print results
-
-print(f"Parse results for {len((DEMOCODES))} code strings\n" + "-"*32)
-for dc in DEMOCODES:
-    print(dc, " "*(20-len(dc)), " ==> ", s_expr(parse_expr(tokenizer(dc))))
 
 # Print binding powers
 
-print("\nOperator  LBP  RBP\n-------------------")
-for oator in sorted(LBP, reverse=True):
-    if oator != "$END":
-        no_fake_lbp = LBP[oator] if LBP[oator] < 100 else "   "
-        no_fake_rbp = RBP[oator] if RBP[oator] < 100 else "   "
-        print(f"{oator:8}  {no_fake_lbp:3}  {no_fake_rbp:3}")
+print("Operator  LBP  RBP\n" + 18*"-")
+print("\n".join(f"{oator:8}  {LBP.get(oator, ''):3}  {RBP.get(oator, ''):3}"
+                for oator in LBP | RBP))
+
+# Tokenize, parse, format and print code examples
+
+print("\nParse code strings\n" + "-"*18)
+for n, dc in enumerate(DEMOS):
+    print(f"{n+1}: ", dc, " "*(19-len(dc)), "==> ",
+          s_expr(parse_expr(tokenizer(dc))))

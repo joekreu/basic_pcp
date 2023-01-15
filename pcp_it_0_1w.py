@@ -14,7 +14,7 @@ def parse_expr(toks):
     oo_stack = ["$BEGIN", toks(1)]
     oator = toks(1)
 
-    if h.c_sex.print_subex_creation:               # Not needed for 
+    if h.c_sex.print_subex_creation:               # Not needed for
         print("stack: " + h.s_expr(oo_stack))      # the actual parsing
     while len(oo_stack) > 2 or h.LBP[oator] >= 0:
         if h.RBP[oo_stack[-2]] >= h.LBP[oator]:    # "Reduce"

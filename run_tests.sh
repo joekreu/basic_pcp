@@ -175,6 +175,6 @@ echo "$ncodes test codes loaded from the file \"$testcodes\"."
 echo "$nparsers parsers (files matching \"$parsers\") run on each test code."
 echo -n "$ntests tests run - should be $ncodes * $nparsers = " 
 echo $((ncodes * nparsers))
-echo "$ncorrect results are precedence correct (i.e., weight correct)."
+echo "$ncorrect results are correct (i.e., weight correct)."
 
 exit

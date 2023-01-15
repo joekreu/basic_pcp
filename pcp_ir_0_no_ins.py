@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 ''' Simple precedence climbing parser. Parsing is iterative and recursive.
 
-    This parser does not employ insertion of fake (virtual) tokens before
-    prefix and after postfix operators. Instead, special code in the function
+    This parser does not employ insertion of virtual tokens before prefix
+    and after postfix operators. Instead, special code in the function
     'parse_expr' takes care of prefix and postfix operators.
-    Version 2020-10-21. Python 3.8 or higher. Only rudimentary error handling.
+    Version 2023-01-15. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
 import helpers as h  # Use LBP, RBP, tokenizer_b, run_parser, c_sex.
