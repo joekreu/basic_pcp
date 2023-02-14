@@ -10,7 +10,7 @@
     promote functional programming (lambda expression, reduce, ...).
 '''
 
-# Use tokenizer_d, first, second, rrest, c_sex, extr_names, run_parser.
+# Use tokenizer_d, first, second, rrest, csx, extr_names, run_parser:
 import helpers as h
 
 
@@ -20,7 +20,7 @@ def parse_expr(tol, sub, min_rbp):
     if min_rbp >= h.first(tol).lp:  # This could be checked by the caller.
         return (tol, sub)           # This could be done by the caller.
     tol1, sub1 = parse_expr(h.rrest(tol), h.second(tol), h.first(tol).rp)
-    return parse_expr(tol1, h.c_sex(h.first(tol), sub, sub1), min_rbp)
+    return parse_expr(tol1, h.csx(h.first(tol), sub, sub1), min_rbp)
 
 
 def parse(tokenizer, code):

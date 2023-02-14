@@ -2,7 +2,7 @@
 
 ''' Simple precedence climbing parser. Parsing is recursive. '''
 
-import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser.
+import helpers as h  # Use LBP, RBP, csx, tokenizer_a, run_parser.
 
 
 def parse_expr_rec(toks, sub, min_rbp=0):
@@ -11,8 +11,8 @@ def parse_expr_rec(toks, sub, min_rbp=0):
     oator, sub1 = toks(), toks(1)
     if h.RBP[oator] < h.LBP[toks(1)]:
         sub1 = parse_expr_rec(toks, sub1, h.RBP[oator])
-    return (h.c_sex(oator, sub, sub1) if min_rbp >= h.LBP[toks()] else
-            parse_expr_rec(toks, h.c_sex(oator, sub, sub1), min_rbp))
+    return (h.csx(oator, sub, sub1) if min_rbp >= h.LBP[toks()] else
+            parse_expr_rec(toks, h.csx(oator, sub, sub1), min_rbp))
 
 
 def parse_expr(toks):

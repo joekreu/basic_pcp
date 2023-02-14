@@ -4,15 +4,17 @@
 # on all test expressions in the file './basic_tests.txt'.
 # The syntax (binding powers) will be loaded from './binding_powers.json'.
 
-Version="0.8, 2022-05-16"
+Version="0.9, 2023-02-11"
 
 # Usage:
 # Start 'run_tests.sh' in the folder containing the required files (the parser
 # modules, helpers.py, bintree.py, binding_powers.json, basic_tests.txt).
-# Use without options (verbose output), or with option -q (very short output):
+# Use without options, or with option -q (very short output),
+# or with option -v (very verbose output)
 
 # ./run_tests.sh
 # ./run_tests.sh -q
+# ./run_tests.sh -v
 
 # The following three variables can be adapted to suit your needs.
 
@@ -36,6 +38,8 @@ cd "$SCRIPTDIR" || exit
 
 if [[ "$1" = "-q" ]]; then
     verbose=0
+elif [[ "$1" = "-v" ]]; then
+    verbose=2
 elif [[ -n "$1" ]]; then
     echo
     echo "Bash script 'run_tests.sh', version $Version"
@@ -52,15 +56,16 @@ elif [[ -n "$1" ]]; then
     echo
     echo "./run_tests.sh"
     echo
-    echo "Use the -q option to get a very short output:"
+    echo "Use the option -q (output is only + or -) or -v (verbose output):"
     echo
     echo  "./run_tests.sh -q"
+    echo  "./run_tests.sh -v"
     echo
 
     exit
 fi
 
-if [[ "$verbose" = 1 ]]; then
+if [[ "$verbose" -ge 1 ]]; then
     echo
     echo "These parsers (files matching \"$parsers\") will be tested:"
 fi
@@ -73,7 +78,7 @@ for parser in $parsers; do
         exit 1
     else
         nparsers=$((nparsers + 1))
-        if [[ "$verbose" = 1 ]]; then
+        if [[ "$verbose" -ge 1 ]]; then
             echo "$nparsers: $parser"
         fi
     fi
@@ -91,7 +96,7 @@ if [[ ! -f "$testcodes" ]]; then
     exit 2
 fi
 
-if [[ "$verbose" = 1 ]]; then
+if [[ "$verbose" -ge 1 ]]; then
     echo
     echo "The codes to be tested will be loaded from \"$testcodes\"."
     echo "Test codes can be"
@@ -103,8 +108,9 @@ if [[ "$verbose" = 1 ]]; then
 
     echo
     echo "A '+' indicates success, a '-' indicates failure of one test for"
-    echo "one parser. 'Success' means: The result is 'weight correct' (see"
-    echo "documentation). Results are formatted as Lisp-like S-expressions." 
+    echo "one parser. 'Success' means: The result is 'weight correct' and it"
+    echo "is a result 'of its input' (see documentation)."
+    echo "Results are formatted as Lisp-like S-expressions." 
     echo "Results contain fake operands (\$PRE, \$POST) for unary operators."
 fi
 
@@ -126,13 +132,13 @@ while IFS= read -r -u 10 code; do
         continue
     fi
 
-    if [[ $((ncodes % askforret)) -eq 0 && -t 1 && "$verbose" = 1 ]] ; then
+    if [[ $((ncodes % askforret)) -eq 0 && -t 1 && "$verbose" -ge 1 ]] ; then
         echo
         read -r -p "Press return to continue ..."
     fi
 
     ncodes=$((ncodes + 1))
-    if [[ "$verbose" = 1 ]]; then
+    if [[ "$verbose" -ge 1 ]]; then
         echo
         echo -n "Test code $ncodes:" "$opt"
         if [[ "$opt" = "" ]] ; then
@@ -148,23 +154,25 @@ while IFS= read -r -u 10 code; do
         if [[ "$res" = "+" ]] ; then
             ncorrect=$((ncorrect + 1))
         fi
-        echo -n "$res"
+        if [[ "$verbose" = 2 ]] ; then
+            echo
+            sexpr=$($parser "-q" "$opt" "$code")
+            echo -n "$sexpr" "[$parser]"
+        else
+            echo -n "$res"
+        fi
     done
     if [[ "$res" = "+" && "$verbose" = 1 ]] ; then
         echo
         sexpr=$($parser "-q" "$opt" "$code")
-        if [[ "$opt" = "" ]] ; then
-            echo "Result: " "${sexpr:4}"
-        else
-            echo  "$sexpr"
-        fi        
+        echo  "$sexpr"
     fi
 
 done 10< "$testcodes"
 
 echo
 
-if [[ -t 1 && "$verbose" = 1 ]]; then
+if [[ -t 1 && "$verbose" -ge 1 ]]; then
     read -r -p "Press return to continue ..."
 fi
 
@@ -175,6 +183,6 @@ echo "$ncodes test codes loaded from the file \"$testcodes\"."
 echo "$nparsers parsers (files matching \"$parsers\") run on each test code."
 echo -n "$ntests tests run - should be $ncodes * $nparsers = " 
 echo $((ncodes * nparsers))
-echo "$ncorrect results are correct (i.e., weight correct)."
+echo "$ncorrect results are weight correct parse trees of their input."
 
 exit

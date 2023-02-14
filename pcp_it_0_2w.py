@@ -3,7 +3,7 @@
     Version with two stacks and two nested 'while' loops in parse_expr.
 '''
 
-import helpers as h  # Use LBP, RBP, c_sex, tokenizer_a, run_parser.
+import helpers as h  # Use LBP, RBP, csx, tokenizer_a, run_parser.
 
 
 def parse_expr(toks):
@@ -19,7 +19,7 @@ def parse_expr(toks):
         oator = toks(1)
         while h.RBP[oator_stack[-1]] >= h.LBP[oator]:   # "Reduce" steps
             right, left = orand_stack.pop(), orand_stack.pop()
-            orand_stack.append(h.c_sex(oator_stack.pop(), left, right))
+            orand_stack.append(h.csx(oator_stack.pop(), left, right))
 
     # orand_stack should contain the result now, i.e., exactly one element
     return orand_stack[0]

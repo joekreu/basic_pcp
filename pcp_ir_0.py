@@ -4,7 +4,7 @@
     Version 2021-11-23. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
-import helpers as h  # Require LBP, RBP, c_sex, tokenizer_a, run_parser
+import helpers as h  # Require LBP, RBP, csx, tokenizer_a, run_parser
 
 
 def parse_expr(toks, min_rbp=0):
@@ -12,7 +12,7 @@ def parse_expr(toks, min_rbp=0):
 
     sub, _ = toks(1), toks(1)       # Advance and assign to sub, advance again
     while min_rbp < h.LBP[toks()]:
-        sub = h.c_sex(toks(), sub, parse_expr(toks, h.RBP[toks()]))
+        sub = h.csx(toks(), sub, parse_expr(toks, h.RBP[toks()]))
     return sub
 
 

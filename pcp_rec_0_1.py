@@ -8,7 +8,7 @@
     not promote functional programming (lambda expression, reduce, ...).
 '''
 
-# Use LBP, RBP, tokenizer_c, first, second, third, rrest, c_sex,
+# Use LBP, RBP, tokenizer_c, first, second, third, rrest, csx,
 # run_parser from helpers:
 import helpers as h
 
@@ -19,9 +19,9 @@ def parse_expr(tol, sub, min_rbp=0):
     oator, sub1, tokm = (h.first(tol), h.second(tol), h.rrest(tol))
     tokn, subn = (parse_expr(tokm, sub1, h.RBP[oator]) if
                   h.RBP[oator] < h.LBP[h.third(tol)] else (tokm, sub1))
-    return ((tokn, h.c_sex(oator, sub, subn))
+    return ((tokn, h.csx(oator, sub, subn))
             if min_rbp >= h.LBP[h.first(tokn)]
-            else parse_expr(tokn, h.c_sex(oator, sub, subn), min_rbp))
+            else parse_expr(tokn, h.csx(oator, sub, subn), min_rbp))
 
 
 def parse(tokenizer, code):

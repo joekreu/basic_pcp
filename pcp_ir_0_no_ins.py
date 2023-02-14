@@ -7,7 +7,7 @@
     Version 2023-01-15. Python 3.8 or higher. Only rudimentary error handling.
 '''
 
-import helpers as h  # Use LBP, RBP, tokenizer_b, run_parser, c_sex.
+import helpers as h  # Use LBP, RBP, tokenizer_b, run_parser, csx.
 
 
 def parse_expr(toks, min_rbp=0):
@@ -15,17 +15,17 @@ def parse_expr(toks, min_rbp=0):
 
     ctok = toks(1)
     if h.LBP.get(ctok) == 100:   # is ctok a prefix op?
-        sub = h.c_sex(ctok, parse_expr(toks, h.RBP[ctok]))
+        sub = h.csx(ctok, parse_expr(toks, h.RBP[ctok]))
     else:
         toks(1)
         sub = ctok
     while min_rbp < h.LBP[toks()]:
         oator = toks()
         if h.RBP[oator] == 100:  # is oator a postfix op?
-            sub = h.c_sex(oator, sub)
+            sub = h.csx(oator, sub)
             toks(1)
         else:
-            sub = h.c_sex(oator, sub, parse_expr(toks, h.RBP[toks()]))
+            sub = h.csx(oator, sub, parse_expr(toks, h.RBP[toks()]))
     return sub
 
 

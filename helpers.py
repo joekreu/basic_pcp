@@ -11,7 +11,7 @@
 
     Python 3.8 or higher is required.
     The "walrus" operator ':=' and the 'nonlocal' keyword are used.
-    Version 2022-09-15.
+    Version 2023-02-11.
 '''
 
 
@@ -29,7 +29,7 @@ import bintree      # bintree.FormatBinaryTree
 
 # === Global constants that can be customized to your needs ===
 
-_HELPERS_VERSION = "0.6.2, 2022-09-15"
+_HELPERS_VERSION = "0.6.3, 2023-01-19"
 
 # Name of JSON file containing binding powers. These binding powers will be
 # ignored if one of the command line option -r, -d is in effect.
@@ -174,24 +174,30 @@ def extr_names(plist):
             [extr_names(tree) for tree in plist])
 
 
-def c_sex(oator, oand1, oand2=None):
+def _tree_to_tlist(tree):
+    ''' Create token list from parse tree.'''
+
+    return ([tree] if _isatomic(tree) else
+            _tree_to_tlist(tree[1]) + [tree[0]] + _tree_to_tlist(tree[2]))
+
+
+def csx(oator, oand1, oand2=None):
     ''' Create subexpression from operator and operand(s).
 
-        'print_subex_creation' is an attribute of the function 'c_sex'.
-        The first line below and the return statement are essential. The
-        rest creates the possibility to better display how the parser works.
+        'print_subex_creation' is an attribute of the function 'csx'.
+        The first line below and the return statement are essential. The rest
+        creates the possibility of better displaying how the parser works.
     '''
 
     sub = [oator, oand1, oand2] if oand2 else [oator, oand1]
-    if c_sex.print_subex_creation:
+    if csx.print_subex_creation:
         print("++ New sub-expr: ", s_expr(extr_names(sub))
               if isinstance(oator, Token) else s_expr(sub))
     return sub
 
 
 def _set_bp():
-    ''' Set missing LBP, RBP values for unary operators, for $BEGIN and $END.
-    '''
+    ''' Set missing LBP, RBP values for unary operators, $BEGIN and $END. '''
 
     for oator in RBP:
         LBP.setdefault(oator, 100)
@@ -202,7 +208,7 @@ def _set_bp():
 
 
 def _raw_toklist(code):
-    ''' Split the code into token; implemented as a 'generator'.'''
+    ''' Split the code into tokens; implemented as a 'generator'.'''
 
     buf = ""
     for pos, char in enumerate(code):
@@ -249,12 +255,12 @@ def tokenizer_a(code):
     '''
 
     toklist = list(tokenizer_e(code))
-    pos = 0                      # Initialise state
+    pos = 0                          # Initialise state
 
     def toks(advance=0):
         ''' Function to be returned by tokenizer_a. '''
 
-        nonlocal pos             # 'nonlocal' requires Python 3.*
+        nonlocal pos                          # 'nonlocal' requires Python 3.*
         return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
@@ -269,9 +275,9 @@ def tokenizer_b(code):
     pos = 0
 
     def toks(advance=0):
-        ''' Function to be returned (a closure). '''
+        ''' Function to be returned by tokenizer_b. '''
 
-        nonlocal pos             # 'nonlocal' requires Python 3.*
+        nonlocal pos                          # 'nonlocal' requires Python 3.*
         return toklist[(pos := pos+advance)]  # Parens required in Python 3.8?
 
     return toks
@@ -351,7 +357,7 @@ def _makebintrees(toklis):
     '''
 
     if not toklis or _isatomic(toklis) or len(toklis) % 2 == 0:
-        # This should not happen.
+        # This should not happen:
         print("Creation of all parse trees not possible. Invalid argument.")
         return None
     if len(toklis) == 1:
@@ -427,8 +433,8 @@ def _print_ranges(toklis):
 
 
 def _check_all_parsings(toklis):
-    ''' Helper function for 'run_parser'. Print possible parse trees for
-        toklis, check for correctness; does not depend on the parse result.
+    ''' Helper function for 'run_parser': print possible parse trees for
+        toklis, check for correctness. Does not depend on the parse result.
     '''
 
     if not (all_parse_trees := _makebintrees(toklis)):
@@ -438,11 +444,11 @@ def _check_all_parsings(toklis):
     else:
         print("\nAll " + str(nppt) + " possible parse trees are checked.")
         if len(toklis) > _MAX_FOR_PRINTED_TREES:
-            print("Weight correct (WEIG COR) and range correct (RANG COR)" +
-                  "\ntrees are printed (there should be exactly one):")
+            print("Weight correct (WEIG COR) and range correct (RANG COR)\n" +
+                  "parse results are printed (there should be exactly one):")
         else:
-            print("Exactly one parse tree should be weight correct and " +
-                  "range correct.\nOther parse trees should be " +
+            print("Exactly one parse result should be weight correct and " +
+                  "range correct.\nOther parse results should be " +
                   "neither weight nor range correct.")
     for tree in all_parse_trees:
         weight_correct = _is_weight_correct(tree)
@@ -509,12 +515,10 @@ def _print_help():
           "and operator ranges." +
           " For pcp_it_0_1w, pcp_it_0_1wg\n      also print explicit" +
           " stack at each pass of the loop.\n" +
-          "-w    Print parse tree upside down, otherwise works like -v.\n" +
-          "-s    Standard output, tree representation is included" +
-          " (default).\n" +
-          "-u    Print parse tree upside down; otherwise like standard" +
-          " output.\n" +
-          "-q    Less verbose output (less than standard); no parse tree.\n" +
+          "-w    2D parse tree upside down, otherwise like -v.\n" +
+          "-s    Standard output, 2D parse is included. This is default.\n" +
+          "-u    2D parse tree upside down; otherwise like standard.\n" +
+          "-q    Less than standard output; no 2D parse tree.\n" +
           "-qq   Print only weight correctness (+ or -). " +
           "Use in test scripts.")
     print("-r    Create and parse random expression with lexpr" +
@@ -603,7 +607,7 @@ def _prepare_command():
     if not options_valid:
         return False, "", quiet, False, False
 
-    c_sex.print_subex_creation = (quiet < 0)  # Create a function attribute.
+    csx.print_subex_creation = (quiet < 0)  # Create a function attribute.
     if "r" in options:
         random_or_cl_defined = True
         if quiet < 1:
@@ -644,15 +648,21 @@ def _print_result(res, res1, quiet, code, upsidedown):
         code       --  Original code to be parsed.
         upsidedown --  Boolean: If True print parse tree upside down
     '''
+    toklist = []
+    toks = tokenizer_a(code)
+    while toks() != "$END":
+        toklist.append(toks(1))
+    toklist.pop()  # Now toklist includes virtual tokens, but not $BEGIN, $END
 
-    pc_ok = _is_weight_correct(res1)  # checked with virtual operands
+    # pc_ok: Result of check with virtual operands
+    pc_ok = _is_weight_correct(res1) and _tree_to_tlist(res1) == toklist
     if quiet <= 0:
         print("Parse result as S-expression:")
         print(s_expr(res))  # With or without fake tokens, depending on parser
     elif quiet == 1:
-        print("Weight correct" if pc_ok
-              else "Result is not weight correct", end="")
-        print(": " + s_expr(res))
+        print("Weight correct parse tree of the input:" if pc_ok else
+              "Result is not a weight correct parse tree of the input:")
+        print(s_expr(res))
     else:
         print("+" if pc_ok else "-")
 
@@ -668,18 +678,14 @@ def _print_result(res, res1, quiet, code, upsidedown):
     btree.printall()
 
     if quiet <= 0:
-        print("\nParse result is weight correct." if pc_ok
-              else "** Parse result is not weight correct!")
+        print("\nParse result is a weight correct parse tree of the input." if
+              pc_ok else
+              "Parse result is not a weight correct parse tree of the input!")
         print("\nLeft and right weight of the root operator of the parse" +
               " tree\nand weights of the root operators of the first order" +
               " subtrees:")
         print(_top3_weights(res1))
 
-    toklist = []
-    toks = tokenizer_a(code)
-    while toks() != "$END":
-        toklist.append(toks(1))
-    toklist.pop()  # Now toklist includes virtual tokens, but not $BEGIN, $END
     print("\nToken positions as used for checking the parse trees\n" +
           "Token    " + "  ".join(toklist))
     str_pos = ["1"]
@@ -699,10 +705,11 @@ def _print_result(res, res1, quiet, code, upsidedown):
 def run_parser(parsefun, tokenizer, fake_tokens_inserted=True):
     ''' Test driver for standard basic parsers (parsers matching "pcp*0*.py").
 
-        parsefun  --  High level parse function, from parser module.
-        tokenizer --  The tokenizer for the parse function (on of 'a' to 'e')
+        parsefun  --  High level parse function, as defined in parser module.
+        tokenizer --  Tokenizer to be used for parsefun (one of tokenizer_a
+                      to tokenizer_e)
 
-        fake_tokens_inserted  --  set False if the tokenier does not insert
+        fake_tokens_inserted  --  set False if the tokenizer does not insert
                                   virtual operands.
     '''
 

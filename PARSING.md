@@ -1,6 +1,6 @@
 ---
 title: "Precedence Climbing Parsing based on Binding Powers and Insertion of Virtual Operands"
-date: "December 2022"
+date: "February 2023"
 author: "Jo Creutziger (joekreu)"
 ---
 
@@ -184,11 +184,10 @@ operators in the same expression.
 
 The parsers return nested lists that represent parse trees.
 These lists can be formatted as Lisp-like _S-expressions_.
-For example,
-parsing `5 + 3 ! * 4` will create the list `[+, 5, [*, [!, 3, $POST], 4]]`;
-formatted as an S-expression this is `(+ 5 (* (! 3 $POST) 4))`.
-Virtual operands can easily be removed from the parse tree, so finally we can
-get `(+ 5 (* (! 3) 4))`.
+For example, parsing `5 + 3 ! * 4` will create the list
+`[+, 5, [*, [!, 3, $POST], 4]]`; formatted as an S-expression this is
+`(+ 5 (* (! 3 $POST) 4))`. Virtual operands can easily be removed from
+the parse tree, so finally we can get `(+ 5 (* (! 3) 4))`.
 
 ### 1.1 Goals
 
@@ -196,7 +195,7 @@ The main goals of this repository are
 
 1. Find and compare sample implementations of precedence climbing algorithms
 based on binding powers. Encourage experimentation.
-2. Use insertion of virtual operands to facilitate parsing of unary operators.
+2. Use insertion of virtual operands to allow parsing of unary operators.
 3. Separate definition of parsing rules from the implementation of the
 parsers.
 4. Better understand the meaning of _precedence correct_ parsing.
@@ -405,7 +404,7 @@ python3 pcp_ir_0.py -h
 
 Several options control the amount of output. The output can, among others,
 contain a two-dimensional representation of the parse tree and indications
-of the _correctness_ of the parsing. This is to facilitate experimentation.
+of the _correctness_ of the parsing. This is to encourage experimentation.
 
 > _Note:_ The terms _precedence correctness_, _weight correctness_,
   _range correctness_ of parsing, _root operator weight_,  that may occur
@@ -416,7 +415,12 @@ of the _correctness_ of the parsing. This is to facilitate experimentation.
 > (1995). \
 > The result of parsing a valid expression should be _weight correct_ and
 > _range correct_, and no other parse tree derived from this expression should
-> be _weight correct_ or _range correct_.
+> be _weight correct_ or _range correct_. \
+> Furthermore, the results should of course be parse trees _for their_
+> _respective input expressions_. The latter means that the operators and
+> operands are in the correct positions and no operator or operand is omitted.
+> For example, a result in which the last operator and the last operand are
+> missing could still be weight correct and range correct.
 
 The shorter call syntax `./PARSER_MODULE 'CODE'` may work, depending on the
 operating system and the shell. Set the _executable_ flag of the parser
@@ -499,10 +503,13 @@ that support `bash` scripts. The script can be run without parameters:
 ./run_tests.sh
 ```
 
-This will print detailed results. The option `-q` reduces the output:
+This creates quite extensive output. The `-q` option reduces the output to `+`
+or `-` for every single test, and the `-v` option produces very verbose
+output.
 
 ```shell
 ./run_tests.sh -q
+./run_tests.sh -v
 ```
 
 ## 4. Structure of the source files. Dependencies
@@ -535,10 +542,10 @@ Comments in the code and data files provide additional information.
 The standard parser modules are somewhat more complex than would be
 necessary for the actual parsing:
 
-- For the creation of subexpressions, the function `helpers.c_sex` is used.
+- For the creation of subexpressions, the function `helpers.csx` is used.
 This allows optional output of the newly created subexpressions. Otherwise,
 simply `[operator, subex1, subex2]` could be used instead of a call
-`helpers.c_sex(operator, subex1, subex2)`.
+`helpers.csx(operator, subex1, subex2)`.
 - The iterative parsers `pcp_it_0_1w` and `pcp_it_0_1wg` contain code for
 the optional output of the explicit operand/operator stack at each pass of
 the loop.

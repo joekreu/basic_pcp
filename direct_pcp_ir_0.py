@@ -6,14 +6,14 @@
 
     Usage:  python3 direct_pcp_ir_0.py    (or possibly:  ./direct_pcp_ir_0.py)
 
-    Version 2023-01-07   Use with Python 3.5 or higher.
+    Version 2023-01-25   Use with Python 3.5 or higher.
 '''
 
 # Define binding powers in global dictionaries LBP, RBP
 LBP = {"+": 14, "*": 17, "!": 22, "^": 21}    # LBP, RBP values should be
 RBP = {"+": 15, "*": 18, "&": 9, "^": 20}     # integers in range 6 to 99.
 
-# Define some code examples. Tokens must be space-separated here!
+# Define some code examples. Tokens must be space-separated!
 DEMOS = ['a + b', '& x', 'n !', 'x + 3.4 * y', 'x * 3.4 + y', 'a + b + 12',
          'n ^ m ^ k', 'xx + b ! * & c + 1']
 
@@ -79,15 +79,16 @@ def s_expr(n_list):
             "(" + " ".join(s_expr(p) for p in n_list) + ")")
 
 
-# Print binding powers
+print("Precedence climbing parsing; iterative and recursive algorithm.")
+print("There are no options and no arguments for this script.")
 
-print("Operator  LBP  RBP\n" + 18*"-")
-print("\n".join(f"{oator:8}  {LBP.get(oator, ''):3}  {RBP.get(oator, ''):3}"
+print("\nOperator  LBP  RBP (left and right binding power)\n")
+print("\n".join(f"{oator:7}  {LBP.get(oator, ''):3}  {RBP.get(oator, ''):3}"
                 for oator in LBP | RBP))
 
 # Tokenize, parse, format and print code examples
 
-print("\nParse code strings\n" + "-"*18)
+print("\nExamples\n")
 for n, dc in enumerate(DEMOS):
     print(f"{n+1}: ", dc, " "*(19-len(dc)), "==> ",
           s_expr(parse_expr(tokenizer(dc))))
