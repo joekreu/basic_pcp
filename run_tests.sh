@@ -16,10 +16,11 @@ Version="0.9, 2023-02-11"
 # ./run_tests.sh -q
 # ./run_tests.sh -v
 
-# The following three variables can be adapted to suit your needs.
+# The following variables can be adapted to suit your needs.
 
-parsers="./pcp*0*.py"          # Pattern for parser files names.
-testcodes="./basic_tests.txt"  # Text file containing the test codes.
+parsers="./pcp*0*.py"                  # Pattern for parser files names.
+testcodes="./basic_tests.txt"          # Text file containing the test codes.
+bindingpowers="./binding_powers.json"  # Binding power definitions (JSON file)
 
 askforret=6  # Ask for 'return' after printing the results of $askforret tests
 
@@ -46,9 +47,9 @@ elif [[ -n "$1" ]]; then
     echo "---------------------------------------------------"
     echo
     echo "Parser files matching \"$parsers\" (basic parsers) will be tested."
-    echo 
-    echo "The file \"binding_powers.json\" contains syntax (binding power)"
-    echo "definitions; the file \"$testcodes\" contains test codes."
+    echo
+    echo "The test codes are read from the file \"$testcodes\", the syntax"
+    echo "(binding power) definitions are taken from \"$bindingpowers\"."
     echo
     echo "Run this script in the directory that contains the required files"
     echo "(the parsers, helpers.py, bintree.py, binding_powers.json,"

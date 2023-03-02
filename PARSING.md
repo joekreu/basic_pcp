@@ -268,7 +268,8 @@ works like `tokenizer_a`.
 _iterator_ on the tokens. A tokenizer implemented as generator can easily
 be used in _iterative_ (_shunting yard_) parsers.
 
-`tokenizer_c` and `tokenizer_d` return a singly linked list of tokens.
+`tokenizer_c` and `tokenizer_d` return a Lisp-like singly linked list of
+tokens.
 
 For `tokenizer_d`, a _token_ is a named tuple that contains the binding
 powers of operator tokens. In this way, access to global data can be

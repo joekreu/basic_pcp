@@ -21,7 +21,8 @@
 # not work here.
 # Directly specified expressions can be indented, e.g., started with 2 spaces.
 
-# Parse results will be considered 'correct' if they are 'weight correct'.
+# Parse results will be considered 'correct' if they are 'weight correct' and
+# are parse trees of the corresponding input.
 # See function 'is_weight_correct' and comments in the code of 'helpers.py'.
 
 # In directly specified expressions it is safe to always separate tokens by
@@ -31,9 +32,10 @@
 # in this regard. A minus sign that is followed by a digit is also considered
 # alphanumeric.
 
-# Edit operator definitions in 'binding_powers.json' if required.
+# Operators in directly specified expressions must be defined in the json file
+# 'binding_powers.json'. Edit operator definitions in this file if required.
 
-# Version: 2022-09-13.
+# Version: 2023-02-14.
 
   a
   3 !

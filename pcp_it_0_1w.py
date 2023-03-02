@@ -11,20 +11,22 @@ import helpers as h  # Use LBP, RBP, s_expr, csx, tokenizer_a, run_parser
 def parse_expr(toks):
     ''' Iterative parser with one 'while' loop and one stack. '''
 
-    oo_stack = ["$BEGIN", toks(1)]
+    oo_stack = [toks(), toks(1)]
     oator = toks(1)
 
-    if h.csx.print_subex_creation:                 # Not needed for
-        print("stack: " + h.s_expr(oo_stack))      # the actual parsing
+    if h.csx.print_subex_creation:                      # Not needed for
+        print("stack: " + h.s_expr(oo_stack))           # the actual parsing
     while len(oo_stack) > 2 or h.LBP[oator] >= 0:
-        if h.RBP[oo_stack[-2]] >= h.LBP[oator]:    # "Reduce"
+        if h.RBP[oo_stack[-2]] >= h.LBP[oator]:         # "Reduce"
             right = oo_stack.pop()
             oo_stack.append(h.csx(oo_stack.pop(), oo_stack.pop(), right))
-        else:                                      # "Shift"
+            if h.csx.print_subex_creation:              # Not needed for
+                print("reduced " + h.s_expr(oo_stack))  # the actual parsing
+        else:                                           # "Shift"
             oo_stack += [oator, toks(1)]
             oator = toks(1)
-        if h.csx.print_subex_creation:             # Not needed for
-            print("stack: " + h.s_expr(oo_stack))  # the actual parsing
+            if h.csx.print_subex_creation:              # Not needed for
+                print("shifted " + h.s_expr(oo_stack))  # the actual parsing
 
     return oo_stack[1]   # oo_stack[0] is the '$BEGIN' token
 
